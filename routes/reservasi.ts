@@ -3,7 +3,7 @@ import { Reservasi } from '@/database/model/all';
 
 const reservasi = new Hono();
 
-reservasi
+reservasi.basePath("/reservasi")
   .get("/", async c => {
     const data = await Reservasi.find();
     return c.json({ status: "berhasil", data });

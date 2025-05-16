@@ -3,7 +3,7 @@ import { Pengguna } from '@/database/model/all';
 
 const pengguna = new Hono();
 
-pengguna
+pengguna.basePath("/pengguna")
   .get("/", async c => {
     const pengguna = await Pengguna.find();
     return c.json({ status: "berhasil", data: pengguna });

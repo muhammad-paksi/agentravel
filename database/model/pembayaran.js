@@ -12,4 +12,4 @@ const pembayaranSchema = new mongoose.Schema(
         timestamps: true, // Menambahkan createdAt & updatedAt
     },
 );
-export default mongoose.models.Item || mongoose.model('pembayaran', pembayaranSchema);
+export default mongoose.models.pembayaran || mongoose.model('pembayaran', pembayaranSchema);

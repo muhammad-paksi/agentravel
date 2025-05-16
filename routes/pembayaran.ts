@@ -3,7 +3,7 @@ import { Pembayaran } from '@/database/model/all';
 
 const pembayaran = new Hono();
 
-pembayaran
+pembayaran.basePath("/pembayaran")
   .post("/", async c => {
     const body = await c.req.json();
     const baru = new Pembayaran(body);
@@ -15,6 +15,7 @@ pembayaran
     const { id } = c.req.param();
     const data = await Pembayaran.findByIdAndUpdate(id, body, { new: true });
     return c.json({ status: "berhasil", data });
-  });
+  })
+;
 
 export default pembayaran;

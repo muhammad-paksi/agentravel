@@ -72,7 +72,7 @@ export function Header() {
           {formattedDate}
         </p>
 
-        <button className="p-2 rounded-full bg-[#f5f5f5] hover:bg-[#5D5D5D]">
+        <button className="p-2 rounded-full bg-[#f5f5f5] hover:bg-[#5D5D5D]" title="Notification">
           <Bell size={20} className="text-[#3D3D3D]" />
         </button>
 

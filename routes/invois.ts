@@ -3,7 +3,7 @@ import { Invois } from '@/database/model/all';
 
 const invois = new Hono();
 
-invois
+invois.basePath("/invois")
   .post("/", async c => {
     const body = await c.req.json();
     const baru = new Invois(body);
