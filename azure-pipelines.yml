@@ -1,18 +1,43 @@
 trigger:
-- main
+  branches:
+    include:
+      - main
+
+resources:
+  repositories:
+    - repository: agentravel
+      type: github
+      name: pdh-24/agentravel
+      endpoint: github-agentravel
 
 pool:
   vmImage: ubuntu-latest
 
+variables:
+  imageName: 'agentravel-app'
+  remoteHost: 'your.server.ip'  # IP server kamu
+  remoteUser: 'your_user'       # User login SSH
+  sshKey: 'SSH_PRIVATE_KEY'     # Nama secret (lihat penjelasan di bawah)
+
 steps:
-- task: Docker@2
-  inputs:
-    containerRegistry: 'MyACRServiceConnection'   # Service connection ke ACR
-    command: 'login'
+- checkout: agentravel
+
+- task: DockerInstaller@0
+  displayName: Install Docker CLI (if needed)
 
 - script: |
-    docker pull youracr.azurecr.io/agentravel:latest
-    docker stop agentravel || true
-    docker rm agentravel || true
-    docker run -d --name agentravel -p 80:3000 youracr.azurecr.io/agentravel:latest
-  displayName: 'Deploy Docker Container'
+    docker build -t $(imageName):latest .
+  displayName: 'Build Docker Image'
+
+- task: InstallSSHKey@0
+  inputs:
+    sshPublicKey: ''
+    sshKeySecureFile: '$(sshKey)'   # Kamu perlu upload SSH private key ke Azure DevOps (lihat bawah)
+    knownHostsEntry: '$(remoteHost)'
+  displayName: 'Install SSH Key'
+
+- script: |
+    docker save $(imageName):latest | bzip2 | ssh $(remoteUser)@$(remoteHost) 'bunzip2 | docker load'
+    ssh $(remoteUser)@$(remoteHost) 'docker stop $(imageName) || true && docker rm $(imageName) || true'
+    ssh $(remoteUser)@$(remoteHost) 'docker run -d --name $(imageName) -p 80:3000 $(imageName):latest'
+  displayName: 'Deploy Docker Image via SSH'
