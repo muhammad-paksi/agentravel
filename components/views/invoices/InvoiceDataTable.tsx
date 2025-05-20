@@ -127,13 +127,14 @@ export default function InvoiceDataTable() {
         </h3>
         <div className="flex gap-2 items-center">
           {/* Unified Search */}
-          <div className="relative">
+          <div className={`relative ${isMobile ? 'w-10 me-3' : ''}`}>
             <Search className="absolute left-2 top-3 h-4 w-4 text-gray-400" />
             <Input
-              placeholder={isMobile ? "" : "Search ticket, customer, date, status..."}
+              placeholder={isMobile ? "" : "Search customer, date, status..."}
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              className="pl-10 h-10 w-full"
+              className={`ps-10 h-10 ${isMobile ? 'w-10 pe-2' : 'w-full'}`}
+              aria-label="Search"
             />
           </div>
           
