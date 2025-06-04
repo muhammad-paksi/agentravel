@@ -5,8 +5,8 @@ export type Report = {
     description: string
     invoice_ref?: {
         _id: string
-        reservation_id?: string
-        reservation?: {
+        reservation_id?: {
+            _id: string
             name: string
             ticket_id: string
             destination: string

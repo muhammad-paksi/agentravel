@@ -1,21 +1,21 @@
 "use client"
 
 import { Card, CardContent } from "@/components/ui/card"
-import { CalendarDays, DollarSign, TrendingUp, TrendingDown } from "lucide-react"
+import { CalendarDays, ClipboardList, ArrowUp, ArrowDown } from "lucide-react"
 import { useReportForm } from "@/hooks/useReportForm"
 
 export function ReportsMetrics() {
     const { loading, reports } = useReportForm("Income")
 
-    const totalRevenue = reports
+    const totalTransactions = reports.length;
+
+    const totalIncome = reports
         .filter(r => r.type === "Income")
         .reduce((sum, r) => sum + r.amount, 0)
 
     const totalExpenses = reports
         .filter(r => r.type === "Expense")
         .reduce((sum, r) => sum + r.amount, 0)
-
-    const netProfit = totalRevenue - totalExpenses
 
     const revenueThisMonth = (() => {
         const now = new Date()
@@ -31,43 +31,29 @@ export function ReportsMetrics() {
             .reduce((sum, r) => sum + r.amount, 0)
     })()
 
-    const expensesThisMonth = (() => {
-        const now = new Date()
-        const currentMonth = now.getMonth()
-        const currentYear = now.getFullYear()
-
-        return reports
-            .filter(r => {
-                if (r.type !== "Expense") return false
-                const date = new Date(r.createdAt || 0)
-                return date.getMonth() === currentMonth && date.getFullYear() === currentYear
-            })
-            .reduce((sum, r) => sum + r.amount, 0)
-    })()
-
     const formatCurrency = (amount: number) =>
         "Rp " + amount.toLocaleString("id-ID")
 
     const metrics = [
         {
-            title: "Total Revenue",
-            value: formatCurrency(totalRevenue),
-            icon: <TrendingUp className="text-white" />,
+            title: "Total Transactions",
+            value: (totalTransactions),
+            icon: <ClipboardList className="text-white" />,
         },
         {
-            title: "Total Expenses",
-            value: formatCurrency(totalExpenses),
-            icon: <TrendingDown className="text-white" />,
-        },
-        {
-            title: "Net Profit",
-            value: formatCurrency(netProfit),
-            icon: <DollarSign className="text-white" />,
-        },
-        {
-            title: "This Month",
-            value: `${formatCurrency(revenueThisMonth)} / ${formatCurrency(expensesThisMonth)}`,
+            title: "Revenue This Month",
+            value: formatCurrency(revenueThisMonth),
             icon: <CalendarDays className="text-white" />,
+        },
+        {
+            title: "Income",
+            value: formatCurrency(totalIncome),
+            icon: <ArrowDown className="text-white" />,
+        },
+        {
+            title: "Expense",
+            value: formatCurrency(totalExpenses),
+            icon: <ArrowUp className="text-white" />,
         },
     ]
 

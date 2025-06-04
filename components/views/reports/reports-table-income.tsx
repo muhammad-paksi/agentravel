@@ -61,9 +61,9 @@ export function ReportsTableIncome() {
                 <Table>
                     <TableHeader className="bg-[#E7E7E7] text-[#888888] rounded-t-xl">
                         <TableRow>
+                            <TableHead>Date</TableHead>
                             <TableHead>Amount</TableHead>
                             <TableHead>Description</TableHead>
-                            <TableHead>Date</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -74,9 +74,9 @@ export function ReportsTableIncome() {
                         ) : filteredReports.length ? (
                             filteredReports.map(r => (
                                 <TableRow key={r._id}>
+                                    <TableCell>{r.createdAt ? formatDate(r.createdAt) : '-'}</TableCell>
                                     <TableCell>{formatCurrency(r.amount)}</TableCell>
                                     <TableCell>{r.description}</TableCell>
-                                    <TableCell>{r.createdAt ? formatDate(r.createdAt) : '-'}</TableCell>
                                 </TableRow>
                             ))
                         ) : (

@@ -8,17 +8,31 @@ const invois = new Hono();
 async function createReportsFromInvoice(invoice: any, isUpdate: boolean = false) {
     console.log(`Processing invoice ${invoice._id} with status ${invoice.status}`);
 
+    // Make sure to properly populate the reservation data
+    const populatedInvoice = await Invois.findById(invoice._id)
+        .populate({
+            path: 'reservation_id',
+            model: 'reservasi' // Make sure this matches your model name
+        });
+
+    if (!populatedInvoice) {
+        console.log('Invoice not found');
+        return;
+    }
+
+    const customerName = populatedInvoice.reservation_id?.name || 'pelanggan';
+    
     // Cari report yang sudah ada untuk invoice ini
     const existingReports = await Laporan.find({ invoice_ref: invoice._id });
     
     // Jika invoice berstatus Paid dan belum ada report Income
-    if (invoice.status === 'Paid' && !existingReports.some(r => r.type === 'Income')) {
+    if (populatedInvoice.status === 'Paid' && !existingReports.some(r => r.type === 'Income')) {
         console.log('Creating Income report for Paid invoice');
         const incomeReport = new Laporan({
-            amount: invoice.total_price || (invoice.total_amount + (invoice.fee || 0)),
+            amount: populatedInvoice.total_price || (populatedInvoice.total_amount + (populatedInvoice.fee || 0)),
             type: 'Income',
-            description: `Pembayaran tiket dari ${invoice.reservation?.name || 'pelanggan'}`,
-            invoice_ref: invoice._id,
+            description: `Pembayaran dari ${customerName}`,
+            invoice_ref: populatedInvoice._id,
             created_by: 'system',
         });
         await incomeReport.save();
@@ -26,14 +40,13 @@ async function createReportsFromInvoice(invoice: any, isUpdate: boolean = false)
     }
     
     // Jika invoice berstatus Unpaid, belum ada report Expense, dan ini bukan update
-    // (kita hanya buat Expense report saat pertama kali create)
-    if (invoice.status === 'Unpaid' && !existingReports.some(r => r.type === 'Expense')) {  // Fixed: Added missing )
+    if (populatedInvoice.status === 'Unpaid' && !existingReports.some(r => r.type === 'Expense')) {
         console.log('Creating Expense report for Unpaid invoice');
         const expenseReport = new Laporan({
-            amount: invoice.total_amount,
+            amount: populatedInvoice.total_amount,
             type: 'Expense',
-            description: `Pemesanan tiket untuk ${invoice.reservation?.name || 'pelanggan'}`,
-            invoice_ref: invoice._id,
+            description: `Pemesanan untuk ${customerName}`,
+            invoice_ref: populatedInvoice._id,
             created_by: 'system',
         });
         await expenseReport.save();
