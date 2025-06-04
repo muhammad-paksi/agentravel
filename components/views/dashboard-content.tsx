@@ -79,7 +79,6 @@ export function DashboardContent(
       icon: <CircleDollarSign className="text-white"/>,
     },
   ]
-  // console.log("User data: ", user);
 
   return (
     <main className="bg-background min-h-screen space-y-5">
