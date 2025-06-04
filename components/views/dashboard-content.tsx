@@ -75,7 +75,7 @@ export function DashboardContent(
     },
     {
       title: "Revenue This Month",
-      value: dashboardData.monthlyRevenue.toLocaleString('id-ID', { style: 'currency', currency: 'IDR' }),
+      value: dashboardData.monthlyRevenue.toLocaleString('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0, maximumFractionDigits: 0 }),
       icon: <CircleDollarSign className="text-white"/>,
     },
   ]
@@ -99,7 +99,7 @@ export function DashboardContent(
                     <p className="text-xs font-medium text-gray-600 mb-1">{m.title}</p>
                     <p className="text-2xl font-bold text-gray-900">{m.value}</p>
                   </div>
-                  <div className={"p-2 rounded-lg bg-var(--primary) "}>{m.icon}</div>
+                  <div className={"p-2 rounded-lg bg-[#377dec]"}>{m.icon}</div>
                 
               </CardContent>
           </Card>
