@@ -26,7 +26,8 @@ export default async function Dashboard() {
             // try {
             //     setLoading(true);
             //     setError(null);
-            const dashboardRes = await fetch('http://localhost:3000/api/dashboard-stats', {
+            const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3000';
+            const dashboardRes = await fetch(`${baseUrl}/api/dashboard-stats`, {
                 credentials: 'include',
             });
             // if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
