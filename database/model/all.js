@@ -62,7 +62,7 @@ const invoisSchema = new mongoose.Schema(
 
 const logTransaksiSchema = new mongoose.Schema(
   {
-    reference_id    : { type: Number, required: true },
+    reference_id    : { type: mongoose.Schema.Types.Mixed, required: true },
     reference_type  : { type: String, enum: ['Reservation', 'Invoice'], required: true },
     date            : { type: Date, required: true },
     description     : { type: String, required: true },
