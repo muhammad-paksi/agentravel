@@ -10,7 +10,6 @@ interface FormFieldProps {
   error?: string;
 }
 
-
 export function FormField({ 
   label, 
   type = "text", 
@@ -18,6 +17,7 @@ export function FormField({
   placeholder, 
   onChange,
   error,
+
 }: FormFieldProps) {
   return (
     <div>
@@ -28,6 +28,8 @@ export function FormField({
         value={value}
         placeholder={placeholder}
         onChange={e => onChange(e.target.value)}
+        readOnly={readOnly}
+        disabled={disabled}
       />
       {error && (
         <p className="mt-1 text-sm text-red-600">

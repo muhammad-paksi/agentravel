@@ -1,5 +1,8 @@
 import { InvoiceFormValues, ApiResponse, Options, InvoiceFilters, PagedResult, Invoice, ReservationReference } from '@/types/invoiceType';
 import { ReservationFormValues } from '@/types/reservationType';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
+import { generateInvoiceHtml } from '@/lib/invoiceTemplate';
 
 const BASE_URL = '/api/invois';
 
@@ -45,7 +48,22 @@ export async function getInvoice(id: string): Promise<Invoice> {
           throw new Error("No data returned from API");
         }
         
-        return json.data;
+        // Map the invoice data to include total_price = total_amount + fee
+        const invoice = json.data;
+        invoice.total_price = (invoice.total_amount || 0) + (invoice.fee || 0);
+
+        // Ensure reservation_ref fields are present
+        if (!invoice.reservation_ref && invoice.reservation) {
+        invoice.reservation_ref = {
+          _id: invoice.reservation._id || '',
+          ticket_id: invoice.reservation.ticket_id?.toString() || '',
+          name: invoice.reservation.name || '',
+          destination: invoice.reservation.destination || '',
+          contact: invoice.reservation.contact || '',
+        };
+        }
+
+        return invoice;
       } catch (parseError) {
         console.error("Error parsing JSON:", parseError);
         throw new Error(`Failed to parse response: ${parseError}`);
@@ -164,6 +182,19 @@ export async function listInvoices(opts: Options = {}): Promise<PagedResult<Invo
     const res = await fetch(`/api/invois?${params.toString()}`);
     if (!res.ok) throw new Error("Failed to fetch invoices");
     const json = await res.json() as { data: Invoice[]; total: number };
+    // Map total_price for each invoice
+    json.data.forEach(inv => {
+      inv.total_price = (inv.total_amount || 0) + (inv.fee || 0);
+      if (!inv.reservation_ref && inv.reservation) {
+        inv.reservation_ref = {
+          _id: inv.reservation._id || '',
+          ticket_id: inv.reservation.ticket_id?.toString() || '',
+          name: inv.reservation.name || '',
+          destination: inv.reservation.destination || '',
+          contact: inv.reservation.contact || '',
+        };
+      }
+    });
     return { data: json.data, total: json.total };
 }
 
@@ -179,9 +210,11 @@ export async function createInvoiceFromReservation(
   const invoicePayload: InvoiceFormValues = {
     reservation_id: reservationId,
     reservation_ref: {
-      _id: reservationId,
+      _id: reservationId || '',
       ticket_id: reservation.ticket_id.toString(),
-      name: reservation.name
+      name: reservation.name,
+      destination: reservation.destination,
+      contact: reservation.contact
     },
     total_amount: reservation.total_price,
     fee: invoiceData.fee || 0,
@@ -193,4 +226,37 @@ export async function createInvoiceFromReservation(
   };
   
   return addInvoice(invoicePayload);
+}
+
+export async function exportBulkPdf(invoiceIds: string[]) {
+  const pdf = new jsPDF({ unit: 'mm', format: 'a5' });
+  for (let i = 0; i < invoiceIds.length; i++) {
+    const id = invoiceIds[i];
+    const data = await getInvoice(id);
+    if (!data) continue;
+
+    // Create offscreen iframe to render HTML & CSS
+    const iframe = document.createElement('iframe');
+    iframe.style.position = 'fixed';
+    iframe.style.top = '-10000px';
+    document.body.appendChild(iframe);
+    const doc = iframe.contentWindow?.document;
+    if (!doc) continue;
+    doc.open();
+    doc.write(generateInvoiceHtml(data));
+    doc.close();
+
+    // Wait for styles to apply
+    await new Promise(res => setTimeout(res, 500));
+    const canvas = await html2canvas(doc.body, { scale: 2 });
+    const imgData = canvas.toDataURL('image/png');
+    const w = pdf.internal.pageSize.getWidth();
+    const h = (canvas.height * w) / canvas.width;
+    if (i > 0) pdf.addPage();
+    pdf.addImage(imgData, 'PNG', 0, 0, w, h);
+
+    document.body.removeChild(iframe);
+  }
+  const blobUrl = pdf.output('bloburl');
+  window.open(blobUrl, '_blank');
 }

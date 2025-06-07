@@ -13,6 +13,7 @@ export function LoginForm() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const router = useRouter();
   const { toast } = useToast();
 
@@ -23,12 +24,28 @@ export function LoginForm() {
     setLoading(true);
 
     try {
-      const params = new URLSearchParams({ username, password });
-      const res = await fetch(`/api/pengguna?${params.toString()}`);
-      const data = await res.json();
-
-      console.log('Login response:', data);
-      if (!res.ok || !data.data || data.data.length === 0) {
+      const signingIn = await fetch( `/api/signin`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          username: username,
+          password: password
+        })
+      });
+      const authDetail = await signingIn.json();
+      // console.log(authDetail);
+      /*
+      const checkToken = await fetch('/api/pengguna/afterSignIn', {
+        method: 'POST',
+        credentials: 'include',
+      })
+      const authenticatedUser = await checkToken.json();
+      console.log(authenticatedUser)
+      */
+      if (!authDetail.loggedIn) {
+        setErrorMessage(`Username atau password tidak valid.`);
         toast({
           variant: "destructive",
           title: "Login gagal. Cek kembali username dan password."
@@ -37,7 +54,7 @@ export function LoginForm() {
         toast({ title: "Login berhasil" });
         // Attempt navigation
         try {
-          await router.push('/dashboard');
+          router.replace('/dashboard');
         } catch (navErr) {
           console.warn('router.push failed, falling back to window.location', navErr);
           window.location.href = '/dashboard';
@@ -96,11 +113,23 @@ export function LoginForm() {
               </button>
             </div>
           </div>
-
+          {errorMessage && (
+            <div className="bg-red-100 text-red-700 px-4 py-2 rounded-md relative text-sm">
+              {errorMessage}
+              <button
+                onClick={() => setErrorMessage(null)}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-red-700 hover:text-red-900"
+                type="button"
+              >
+                &times;
+              </button>
+            </div>
+          )}
           <Button
             type="submit"
             className={`w-full rounded-full text-white ${isFormValid ? 'bg-[#377dec] hover:bg-[#4a8ef0]' : 'bg-gray-700 cursor-not-allowed'}`}
             disabled={loading || !isFormValid}
+            onClick={() => setErrorMessage(null)}
           >
             {loading ? 'Logging in...' : 'Log In'}
           </Button>

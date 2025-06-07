@@ -7,11 +7,15 @@ export interface ReservationReference {
   _id: string;
   ticket_id: string;
   name: string;
+  destination: string;
+  contact: string;
 }
+
 
 export interface InvoiceFormValues {
     reservation_id: string;
-    reservation_ref?: ReservationReference;
+    reservation_ref?: Partial<ReservationReference>;
+    reservation?: ReservationFormValues;
     total_amount: number;
     fee: number;
     payment_method: PaymentMethod
@@ -28,7 +32,8 @@ export interface Invoice extends InvoiceFormValues {
   createdAt: string;
   updatedAt: string;
   /** Populated reservation object from the API */
-  reservation?: ReservationFormValues;
+  
+  total_price?: number; // Added total_price as optional
 }
 
 export interface ApiResponse<T> {

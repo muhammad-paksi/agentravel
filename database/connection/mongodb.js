@@ -7,31 +7,27 @@ if (!MONGODB_URI) {
   throw new Error('Please define the MONGODB_URI environment variable');
 }
 
-/** 
- * Cached connection for MongoDB.
- */
-let cached = global.mongoose;
+const options = {
+  // Default pool size: 5. Bisa disesuaikan
+  maxPoolSize: 10,
+  serverSelectionTimeoutMS: 5000, // optional: fail faster
+};
 
-if (!cached) {
-  cached = global.mongoose = { conn: null, promise: null };
-}
+let isConnected = false;
 
 async function dbConnect() {
-  if (cached.conn) {
-    return cached.conn;
+  if (isConnected) {
+    return;
   }
 
-  if (!cached.promise) {
-    cached.promise = mongoose.connect(MONGODB_URI)
-    .then((mongoose) => {
-      return mongoose;
-    })
-    .catch((err) => {
-      console.error('MongoDB connection error:', err);
-    });
+  try {
+    const conn = await mongoose.connect(MONGODB_URI, options);
+    isConnected = true;
+    // console.log('[MongoDB] ✅ Connected to DB:', conn.connection.name, "\n");
+  } catch (error) {
+    console.error('[MongoDB] ❌ Connection error:', error);
+    throw error;
   }
-  cached.conn = await cached.promise;
-  return cached.conn;
 }
 
 export default dbConnect;
