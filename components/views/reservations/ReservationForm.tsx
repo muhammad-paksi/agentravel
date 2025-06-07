@@ -4,7 +4,6 @@ import { SelectField } from "@/components/ui/select-field";
 import { Button } from "@/components/ui/button";
 import { useReservationForm } from "@/hooks/useReservationForm";
 import { PaymentMethod, PaymentStatus, ReservationStatus } from "@/types/reservationType";
-import { useAuth } from "@/hooks/useAuth";
 
 const paymentMethodOptions: { label: string; value: string }[] = [
   { label: "Prepaid", value: "Prepaid" },
@@ -31,17 +30,6 @@ export const ReservationForm: React.FC<{ id?: string }> = ({ id }) => {
     submit,
     isEdit,
   } = useReservationForm({ id });
-
-  const { user } = useAuth();
-
-  useEffect(() => {
-    if (!isEdit && user) {
-      setForm((f) => ({
-        ...f,
-        admin_id: user.username,
-      }));
-    }
-  }, [isEdit, user]);
 
   if (fetching) return <p>Loading…</p>;
   if (error) return <p className="text-red-600">{error}</p>;
@@ -151,9 +139,7 @@ export const ReservationForm: React.FC<{ id?: string }> = ({ id }) => {
             <FormField
               label="Admin ID"
               value={form.admin_id}
-              readOnly={true}
-              onChange={() =>{}}
-              // onChange={(v) => setForm((f) => ({ ...f, admin_id: v }))}
+              onChange={(v) => setForm((f) => ({ ...f, admin_id: v }))}
             />
           </div>
         </section>
