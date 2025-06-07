@@ -28,8 +28,6 @@ export function FormField({
         value={value}
         placeholder={placeholder}
         onChange={e => onChange(e.target.value)}
-        readOnly={readOnly}
-        disabled={disabled}
       />
       {error && (
         <p className="mt-1 text-sm text-red-600">
