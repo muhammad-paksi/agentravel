@@ -34,16 +34,8 @@ export function LoginForm() {
           password: password
         })
       });
+      
       const authDetail = await signingIn.json();
-      // console.log(authDetail);
-      /*
-      const checkToken = await fetch('/api/pengguna/afterSignIn', {
-        method: 'POST',
-        credentials: 'include',
-      })
-      const authenticatedUser = await checkToken.json();
-      console.log(authenticatedUser)
-      */
       if (!authDetail.loggedIn) {
         setErrorMessage(`Username atau password tidak valid.`);
         toast({

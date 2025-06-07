@@ -1,5 +1,5 @@
 import { Hono } from 'hono';
-import { Invois, Laporan, LogTransaksi } from '@/database/model/all';
+import { Invois, Laporan, LogTransaksi, Reservasi } from '@/database/model/all';
 
 const invois = new Hono();
 
@@ -81,6 +81,7 @@ async function createReportsFromInvoice(invoice: any, isUpdate: boolean = false)
 }
 
 invois
+  /* POST LAMA
   .post("/", async c => {
     const body = await c.req.json();
     const baru = new Invois(body);
@@ -91,9 +92,88 @@ invois
 
     return c.json({ message: "Invois dibuat", data: baru });
   })
+  */
+  // POST BARU
+  .post("/", async c => {
+    const body = await c.req.json();
+    /**
+     * Contoh isi body invois baru yang berisi dua reservasi:
+     * {
+            "customerName": "Paksi Bayu",
+            "reservationIds": [
+                "665efc7e23850f12cf4f2b3d",
+                "665efc8c23850f12cf4f2b3e"
+            ]
+        }
+     */
+
+    const { customerName, reservationIds } = body;
+
+    // Validasi ID-ID yang dikirim, optional tapi disarankan
+    const existingReservations = await Reservasi.find({
+        _id: { $in: reservationIds }
+    });
+
+    if (existingReservations.length !== reservationIds.length) {
+        return c.json({ error: 'Beberapa reservation ID tidak ditemukan' }, 400);
+    }
+
+    // Buat invoice dengan ID-ID yang sudah dikirim
+    const invoice = await Invois.create({
+        customerName,
+        reservations: reservationIds
+    });
+
+    return c.json(invoice, 201);
+  })
+  /* GET LAMA
   .get("/", async c => {
     const list = await Invois.find().populate('reservation_id');
     return c.json({ status: "berhasil", data: list });
+  })
+  */
+
+  // GET BARU
+  .get('/', async (c) => {
+    const invois = await Invois.find().populate('reservations');
+    
+    return c.json({
+        status: "berhasil",
+        messsage: "Daftar invoice berhasil diambil",
+        data: invois
+    });
+    // Contoh isi invois berisi dua reservasi:
+    /*
+    [
+        {
+          "_id": "665ef1...",
+          "customerName": "Paksi Bayu",
+          "date": "2025-06-04T14:00:00.000Z",
+          "reservations": [
+            {
+              "_id": "665efc7e23850f12cf4f2b3d",
+              "type": "flight",
+              "details": {
+                "from": "CGK",
+                "to": "KUL"
+              },
+              "amount": 800000,
+              "__v": 0
+            },
+            {
+              "_id": "665efc8c23850f12cf4f2b3e",
+              "type": "hotel",
+              "details": {
+                "name": "Hotel Bagus"
+              },
+              "amount": 400000,
+              "__v": 0
+            }
+          ],
+          "__v": 0
+        }
+      ]
+    */
   })
   .get("/:id", async c => {
     const { id } = c.req.param();

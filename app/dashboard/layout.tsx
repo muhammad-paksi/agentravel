@@ -13,48 +13,7 @@ import { encrypt, decrypt } from "@/routes/utils/auth";
 // import { usePathname } from 'next/navigation';
 // import { getUser } from '@/lib/dal';
 
-export default async function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
-  // const router = useRouter();
-  // const pathname = usePathname();
-  // const [user, setUser] = useState< User | null>(null);
-
-  // useEffect(() => {
-  //   console.log("Checking cookie for authentication at: ", pathname);
-  //   fetch('/api/pengguna/afterSignIn', {
-  //     credentials: 'include',
-  //   })
-  //   .then(res => res.json())
-  //   .then(data => {
-  //     // console.log("Data.loggedIn: ", data.loggedIn);
-  //     // console.log("Data user: ", data.user)
-  //     // const comparison = compareUserData(data.user, user);
-  //     // console.log("newly fetched", data.user)
-  //     // console.log("already fetched", user)
-  //     if (data.loggedIn) {
-  //       setUser(data.user);
-  //     } else {
-  //       // router.push('/');
-  //     }
-  //   });
-  //   // check_cookie().then(auth => {
-  //   //   if (auth.loggedIn) setUser(auth.user);
-  //   //   else router.push('/');
-  //   // });
-  // }, [pathname]);
-  // const token = (await cookies()).get('token')?.value; // ini ambil dari Next.js server
-  // if (token == undefined) 
-  // const res = await fetch('http://localhost:3000/api/pengguna/afterSignIn', {
-  //   headers: {
-  //     'Cookie' : token || '', // Pass the cookie to the request
-  //   },
-  //   credentials: 'include',
-  // })
-  // const data = await res.json() as User;
-  // console.log(data)
+export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const cookie = await cookies();
   const data = cookie.get('token')?.value
   const user = await decrypt(data) as User;

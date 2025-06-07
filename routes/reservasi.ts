@@ -24,6 +24,7 @@ reservasi
 
   .post("/", async c => {
     const body = await c.req.json();
+    body.status = "Booked"; // Set default status to Booked
     const baru = new Reservasi(body);
     await baru.save();
 

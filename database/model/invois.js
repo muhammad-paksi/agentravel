@@ -2,7 +2,8 @@ import mongoose from 'mongoose';
 
 const invoisSchema = new mongoose.Schema(
     {
-        reservation_id  : { type: /* String */ mongoose.Schema.Types.ObjectId, ref: 'Reservation' , required: true },
+        reservation_id  : [{ type: /* String */ mongoose.Schema.Types.ObjectId, ref: 'Reservation' , required: true }],
+        customer_name   : { type: String, required: false },
         total_amount    : { type: Number/* mongoose.Types.Decimal128 */, required: true },
         fee             : { type: Number/* mongoose.Types.Decimal128 */, required: true },
         payment_method  : { type: String, enum: ['Bank Transfer', 'Credit Card', 'Cash'], required: true },
