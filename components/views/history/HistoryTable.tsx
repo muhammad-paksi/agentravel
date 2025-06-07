@@ -27,6 +27,14 @@ export function HistoryTable() {
     })
   }, [histories, searchQuery, typeFilter])
 
+  const formatDate = (date: Date | string) => {
+    const d = new Date(date);
+    const day = d.getDate();
+    const month = d.getMonth() + 1;
+    const year = d.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
+
   return (
     <div className="bg-white rounded-lg shadow p-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4">
@@ -57,39 +65,39 @@ export function HistoryTable() {
         </div>
       </div>
 
-      <div className="overflow-x-auto">
-        <Table>
-          <TableHeader className="bg-[#E7E7E7] text-[#888888] rounded-t-xl">
-            <TableRow>
-              <TableHead>No. History</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>Date</TableHead>
-              <TableHead>Description</TableHead>
-              <TableHead>Actor</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
+      <div className="overflow-x-auto bg-white rounded-xl shadow">
+        <table className="min-w-full rounded-lg bg-white overflow-hidden">
+          <thead className="bg-gray-300">
+            <tr>
+              <th className="px-4 py-2 text-left">No. History</th>
+              <th className="px-4 py-2 text-left">Type</th>
+              <th className="px-4 py-2 text-left">Date</th>
+              <th className="px-4 py-2 text-left">Description</th>
+              <th className="px-4 py-2 text-left">Actor</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200">
             {loading ? (
-              <TableRow>
-                <TableCell colSpan={5} className="text-center py-8">Loading...</TableCell>
-              </TableRow>
+              <tr>
+                <td colSpan={5} className="px-4 py-2 text-center">Please wait, loading...</td>
+              </tr>
             ) : filtered.length ? (
-              filtered.map((h) => (
-                <TableRow key={h._id} className="hover:bg-gray-50">
-                  <TableCell>{h.reference_id}</TableCell>
-                  <TableCell>{h.reference_type}</TableCell>
-                  <TableCell>{new Date(h.date).toLocaleDateString()}</TableCell>
-                  <TableCell>{h.description}</TableCell>
-                  <TableCell>{h.actor}</TableCell>
-                </TableRow>
+              filtered.map((h, index) => (
+                <tr key={h._id}>
+                  <td className="px-4 py-2 h-13">{index + 1}</td>
+                  <td className="px-4 py-2 h-13">{h.reference_type}</td>
+                  <td className="px-4 py-2 h-13">{formatDate(h.date)}</td>
+                  <td className="px-4 py-2 h-13">{h.description}</td>
+                  <td className="px-4 py-2 h-13">{h.actor}</td>
+                </tr>
               ))
             ) : (
-              <TableRow>
-                <TableCell colSpan={5} className="text-center py-8">No history found.</TableCell>
-              </TableRow>
+              <tr>
+                <td colSpan={5} className="px-4 py-2 text-center">No history found</td>
+              </tr>
             )}
-          </TableBody>
-        </Table>
+          </tbody>
+        </table>
       </div>
     </div>
   )
