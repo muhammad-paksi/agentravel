@@ -135,7 +135,7 @@ invois
 
   // GET BARU
   .get('/', async (c) => {
-    const invois = await Invois.find().populate('reservations');
+    const invois = await Invois.find().populate('reservation_id');
     
     return c.json({
         status: "berhasil",
