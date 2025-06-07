@@ -203,7 +203,7 @@ export default function InvoiceDataTable() {
             ) : filtered.length === 0 ? (
               <tr>
                 <td colSpan={9} className="px-4 py-2 text-center">
-                  No invoice data found.
+                  No invoice data found
                 </td>
               </tr>
             ) : (

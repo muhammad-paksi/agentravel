@@ -23,8 +23,13 @@ export function ReportsTableExpense() {
     const formatCurrency = (amount: number) => 
         `Rp${amount.toLocaleString("id-ID")}`
 
-    const formatDate = (dateString: string) => 
-        format(new Date(dateString), "dd/MM/yyyy", { locale: id })
+    const formatDate = (dateString: string) => {
+        const d = new Date(dateString)
+        const day = d.getDate()
+        const month = d.getMonth() + 1
+        const year = d.getFullYear()
+        return `${day}/${month}/${year}`
+    }
 
     return (
         <div className="bg-white rounded-lg shadow p-6">
@@ -81,7 +86,7 @@ export function ReportsTableExpense() {
                             ))
                         ) : (
                             <tr>
-                                <td colSpan={3} className="px-4 py-2 text-center">No expense reports found.</td>
+                                <td colSpan={3} className="px-4 py-2 text-center">No expense reports found</td>
                             </tr>
                         )}
                     </tbody>
