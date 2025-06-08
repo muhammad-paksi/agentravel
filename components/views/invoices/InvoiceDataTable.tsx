@@ -233,7 +233,7 @@ export default function InvoiceDataTable() {
                   <td className="px-4 py-2">{formatCurrency(inv.total_amount)}</td>
                   <td className="px-4 py-2">{formatCurrency(inv.total_price || (inv.total_amount + (inv.fee || 0)))}</td>
                   <td className="flex flex-row gap-2 justify-center">
-                    <Checkbox className="h-8 w-8 rounded-lg bg-green-200 border-green-300 text-green-400" checked={selectedIds.includes(inv._id)} indeterminate={false} onCheckedChange={()=>toggle(inv._id)} />
+                    <Checkbox checked={selectedIds.includes(inv._id)} indeterminate={false} onCheckedChange={()=>toggle(inv._id)} />
                   </td>
                   <td className="px-4 py-2">
                     <div className="flex flex-row gap-2 justify-center">
