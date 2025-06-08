@@ -1,6 +1,3 @@
-// app/dashboard/reservations/page.tsx
-"use client"
-
 import { useState } from "react"
 import { ReportsTableIncome } from "@/components/views/reports/reports-table-income"
 import { ReportsTableExpense } from "@/components/views/reports/reports-table-expense"

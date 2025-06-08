@@ -4,7 +4,6 @@ import { SelectField } from "@/components/ui/select-field";
 import { Button } from "@/components/ui/button";
 import { useReservationForm } from "@/hooks/useReservationForm";
 import { PaymentMethod, PaymentStatus, ReservationStatus } from "@/types/reservationType";
-import { useAuth } from "@/hooks/useAuth";
 
 const paymentMethodOptions: { label: string; value: string }[] = [
   { label: "Prepaid", value: "Prepaid" },
@@ -28,20 +27,10 @@ export const ReservationForm: React.FC<{ id?: string }> = ({ id }) => {
     loading,
     fetching,
     error,
+    errors,
     submit,
     isEdit,
   } = useReservationForm({ id });
-
-  const { user } = useAuth();
-
-  useEffect(() => {
-    if (!isEdit && user) {
-      setForm((f) => ({
-        ...f,
-        admin_id: user.username,
-      }));
-    }
-  }, [isEdit, user]);
 
   if (fetching) return <p>Loading…</p>;
   if (error) return <p className="text-red-600">{error}</p>;
@@ -58,18 +47,21 @@ export const ReservationForm: React.FC<{ id?: string }> = ({ id }) => {
             placeholder="Enter NIK"
             type="number"
             value={form.nik}
+            error={errors.nik}
             onChange={(v) => setForm(f => ({ ...f, nik: Number(v) }))}
           />
           <FormField
             label="Customer Name"
             placeholder="Enter customer name"
             value={form.name}
+            error={errors.name}
             onChange={(v) => setForm(f => ({ ...f, name: v }))}
           />
           <FormField
             label="Contact (Phone/Email)"
             placeholder="Enter contact"
             value={form.contact}
+            error={errors.contact}
             onChange={(v) => setForm((f) => ({ ...f, contact: v }))}
           />
           </div>
@@ -84,6 +76,7 @@ export const ReservationForm: React.FC<{ id?: string }> = ({ id }) => {
               placeholder="Enter ticket ID"
               type="number"
               value={form.ticket_id}
+              error={errors.ticket_id}
               onChange={(v) => setForm((f) => ({ ...f, ticket_id: Number(v) }))}
             />
 
@@ -91,6 +84,7 @@ export const ReservationForm: React.FC<{ id?: string }> = ({ id }) => {
               label="Destination"
               placeholder="Enter destination"
               value={form.destination}
+              error={errors.destination}
               onChange={(v) => setForm((f) => ({ ...f, destination: v }))}
             />
 
@@ -98,6 +92,7 @@ export const ReservationForm: React.FC<{ id?: string }> = ({ id }) => {
               label="Date"
               type="date"
               value={form.date.toISOString().substring(0, 10)}
+              error={errors.date}
               onChange={(v) => setForm((f) => ({ ...f, date: new Date(v) }))}
               />
           </div>
@@ -111,6 +106,7 @@ export const ReservationForm: React.FC<{ id?: string }> = ({ id }) => {
               label="Estimated Budget"
               type="number"
               value={form.estimated_budget}
+              error={errors.estimated_budget}
               onChange={(v) => setForm((f) => ({ ...f, estimated_budget: Number(v) }))}
             />
 
@@ -118,6 +114,7 @@ export const ReservationForm: React.FC<{ id?: string }> = ({ id }) => {
               label="Total Price"
               type="number"
               value={form.total_price}
+              error={errors.total_price}
               onChange={(v) => setForm((f) => ({ ...f, total_price: Number(v) }))}
             />
 
@@ -150,10 +147,10 @@ export const ReservationForm: React.FC<{ id?: string }> = ({ id }) => {
 
             <FormField
               label="Admin ID"
+              placeholder="Enter your Admin ID"
               value={form.admin_id}
-              readOnly={true}
-              onChange={() =>{}}
-              // onChange={(v) => setForm((f) => ({ ...f, admin_id: v }))}
+              error={errors.admin_id}
+              onChange={(v) => setForm((f) => ({ ...f, admin_id: v }))}
             />
           </div>
         </section>

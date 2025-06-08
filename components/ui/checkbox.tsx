@@ -1,41 +1,61 @@
+// components/ui/Checkbox.tsx
 "use client"
 
 import * as React from "react"
 import * as CheckboxPrimitive from "@radix-ui/react-checkbox"
-import { Check } from "lucide-react"
 
-import { cn } from "@/lib/utils"
+import "@/app/globals.css"    // ← adjust path as needed
 
-interface CheckboxProps extends React.ComponentPropsWithoutRef<typeof CheckboxPrimitive.Root> {
-  indeterminate?: boolean;
+interface CheckboxProps
+  extends React.ComponentPropsWithoutRef<typeof CheckboxPrimitive.Root> {
+  /**
+   * Show an indeterminate state
+   */
+  indeterminate?: boolean
+  /**
+   * Label text for the checkbox
+   */
+  children?: React.ReactNode
 }
 
-const Checkbox = React.forwardRef<
+export const Checkbox = React.forwardRef<
   React.ElementRef<typeof CheckboxPrimitive.Root>,
   CheckboxProps
->(({ className, indeterminate = false, checked, ...props }, ref) => {
-  // Determine Radix checked value
-  const radixChecked: true | false | "indeterminate" =
-    indeterminate ? "indeterminate" : (checked as true | false)
+>(({ children, indeterminate = false, ...props }, forwardedRef) => {
+  // local ref to the native input
+  const inputRef = React.useRef<HTMLInputElement>(null)
+
+  // apply indeterminate property on the input element
+  React.useEffect(() => {
+    if (inputRef.current) {
+      inputRef.current.indeterminate = indeterminate
+    }
+  }, [indeterminate])
 
   return (
-    <CheckboxPrimitive.Root
-      ref={ref}
-      className={cn(
-        "peer h-4 w-4 shrink-0 rounded-sm border border-primary ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
-        className
-      )}
-      {...props}
-      checked={radixChecked}
-    >
-      <CheckboxPrimitive.Indicator
-        className={cn("flex items-center justify-center text-current", indeterminate ? "data-[state=indeterminate]:" : "")}
+    <label className="checkbox-wrapper">
+      <CheckboxPrimitive.Root
+        asChild
+        ref={forwardedRef}
+        {...props}
       >
-        <Check className="h-4 w-4" />
-      </CheckboxPrimitive.Indicator>
-    </CheckboxPrimitive.Root>
+        <input ref={inputRef} type="checkbox" />
+      </CheckboxPrimitive.Root>
+
+      <div className="checkmark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path
+            d="M20 6L9 17L4 12"
+            strokeWidth="3"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </div>
+
+      {children && <span className="label">{children}</span>}
+    </label>
   )
 })
-Checkbox.displayName = CheckboxPrimitive.Root.displayName
 
-export { Checkbox }
+Checkbox.displayName = "Checkbox"

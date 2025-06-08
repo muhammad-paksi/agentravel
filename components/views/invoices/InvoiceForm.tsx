@@ -82,7 +82,7 @@ export const InvoiceForm: React.FC<{ id?: string }> = ({ id }) => {
 
       {/* Reservation Detail */}
       <section>
-        <h2 className="text-lg font-bold mb-2">Reservation Detail</h2>
+        <h2 className="text-lg font-bold mb-2">Selected Reservation Detail</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <SelectField
             label="Select Reservation"
@@ -90,7 +90,7 @@ export const InvoiceForm: React.FC<{ id?: string }> = ({ id }) => {
             value={form.reservation_id}
             options={reservationOptions}
             onChange={onReservationChange}
-            disabled={isEdit} // Disable changing reservation when editing
+            disabled={isEdit}
           />
           
           {selectedReservation && (
@@ -100,27 +100,27 @@ export const InvoiceForm: React.FC<{ id?: string }> = ({ id }) => {
                 <div className="bg-gray-50 p-3 rounded border">
                   <div className="grid grid-cols-2 gap-2 text-sm">
                     <div>
-                      <p className="font-medium">Customer:</p>
+                      <p className="font-bold">Customer:</p>
                       <p>{selectedReservation.name}</p>
                     </div>
                     <div>
-                      <p className="font-medium">Ticket ID:</p>
+                      <p className="font-bold">Ticket ID:</p>
                       <p>#{selectedReservation.ticket_id}</p>
                     </div>
                     <div>
-                      <p className="font-medium">Destination:</p>
+                      <p className="font-bold">Destination:</p>
                       <p>{selectedReservation.destination}</p>
                     </div>
                     <div>
-                      <p className="font-medium">Travel Date:</p>
+                      <p className="font-bold">Travel Date:</p>
                       <p>{new Date(selectedReservation.date).toLocaleDateString()}</p>
                     </div>
                     <div>
-                      <p className="font-medium">Total Price:</p>
+                      <p className="font-bold">Total Price:</p>
                       <p>Rp {selectedReservation.total_price.toLocaleString('id-ID')}</p>
                     </div>
                     <div>
-                      <p className="font-medium">Status:</p>
+                      <p className="font-bold">Status:</p>
                       <p>{selectedReservation.status}</p>
                     </div>
                   </div>

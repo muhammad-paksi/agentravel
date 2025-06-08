@@ -23,8 +23,13 @@ export function ReportsTableIncome() {
     const formatCurrency = (amount: number) => 
         `Rp${amount.toLocaleString("id-ID")}`
 
-    const formatDate = (dateString: string) => 
-        format(new Date(dateString), "dd/MM/yyyy", { locale: id })
+    const formatDate = (dateString: string) => {
+        const d = new Date(dateString)
+        const day = d.getDate()
+        const month = d.getMonth() + 1
+        const year = d.getFullYear()
+        return `${day}/${month}/${year}`
+    }
 
     return (
         <div className="bg-white rounded-lg shadow p-6">
@@ -57,35 +62,35 @@ export function ReportsTableIncome() {
                     </Select>
                 </div>
             </div>
-            <div className="overflow-x-auto">
-                <Table>
-                    <TableHeader className="bg-[#E7E7E7] text-[#888888] rounded-t-xl">
-                        <TableRow>
-                            <TableHead>Date</TableHead>
-                            <TableHead>Amount</TableHead>
-                            <TableHead>Description</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
+            <div className="overflow-x-auto bg-white rounded-xl shadow">
+                <table className="min-w-full rounded-lg bg-white overflow-hidden">
+                    <thead className="bg-gray-300">
+                        <tr>
+                            <th className="px-4 py-2 text-left">Date</th>
+                            <th className="px-4 py-2 text-left">Amount</th>
+                            <th className="px-4 py-2 text-left">Description</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
                         {loading ? (
-                            <TableRow>
-                                <TableCell colSpan={3} className="text-center py-8">Loading...</TableCell>
-                            </TableRow>
+                            <tr>
+                                <td colSpan={3} className="px-4 py-2 text-center">Please wait, loading...</td>
+                            </tr>
                         ) : filteredReports.length ? (
                             filteredReports.map(r => (
-                                <TableRow key={r._id}>
-                                    <TableCell>{r.createdAt ? formatDate(r.createdAt) : '-'}</TableCell>
-                                    <TableCell>{formatCurrency(r.amount)}</TableCell>
-                                    <TableCell>{r.description}</TableCell>
-                                </TableRow>
+                                <tr key={r._id}>
+                                    <td className="px-4 py-2 h-13">{r.createdAt ? formatDate(r.createdAt) : '-'}</td>
+                                    <td className="px-4 py-2 h-13">{formatCurrency(r.amount)}</td>
+                                    <td className="px-4 py-2 h-13">{r.description}</td>
+                                </tr>
                             ))
                         ) : (
-                            <TableRow>
-                                <TableCell colSpan={3} className="text-center py-8">No income reports found.</TableCell>
-                            </TableRow>
+                            <tr>
+                                <td colSpan={3} className="px-4 py-2 text-center">No income reports found</td>
+                            </tr>
                         )}
-                    </TableBody>
-                </Table>
+                    </tbody>
+                </table>
             </div>
         </div>
     )

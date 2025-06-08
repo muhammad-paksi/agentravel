@@ -196,14 +196,14 @@ export default function InvoiceDataTable() {
           <tbody className="divide-y divide-gray-200">
             {loading || loadingReservations ? (
               <tr>
-                <td colSpan={7} className="px-4 py-2 text-center">
+                <td colSpan={9} className="px-4 py-2 text-center">
                   Please wait, loading...
                 </td>
               </tr>
             ) : filtered.length === 0 ? (
               <tr>
-                <td colSpan={8} className="px-4 py-2 text-center">
-                  Data Invoice tidak ditemukan
+                <td colSpan={9} className="px-4 py-2 text-center">
+                  No invoice data found
                 </td>
               </tr>
             ) : (
@@ -233,7 +233,7 @@ export default function InvoiceDataTable() {
                   <td className="px-4 py-2">{formatCurrency(inv.total_amount)}</td>
                   <td className="px-4 py-2">{formatCurrency(inv.total_price || (inv.total_amount + (inv.fee || 0)))}</td>
                   <td className="flex flex-row gap-2 justify-center">
-                    <Checkbox className="h-8 w-8 rounded-lg bg-green-200 border-green-300 text-green-400" checked={selectedIds.includes(inv._id)} indeterminate={false} onCheckedChange={()=>toggle(inv._id)} />
+                    <Checkbox checked={selectedIds.includes(inv._id)} indeterminate={false} onCheckedChange={()=>toggle(inv._id)} />
                   </td>
                   <td className="px-4 py-2">
                     <div className="flex flex-row gap-2 justify-center">

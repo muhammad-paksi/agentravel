@@ -1,6 +1,5 @@
-import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
-import { encrypt, decrypt } from "@/routes/utils/auth";
+import { decrypt } from "@/routes/utils/auth";
 import { tokenPayload } from '@/types/payloadType';
  
 // 1. Specify protected and public routes
@@ -17,28 +16,20 @@ export default async function middleware(req: NextRequest) {
   const isPublicRoute = publicRoutes.includes(path)
   
 	// 3. If the cookie is not present, redirect to /login
-  if (isProtectedRoute && !cookie) {
-    return NextResponse.redirect(new URL('/', req.nextUrl));
-  }
+  if (isProtectedRoute && !cookie) return NextResponse.redirect(new URL('/', req.nextUrl));
  
   // 4. Decrypt the session from the cookie
-  // const cookie = (await cookies()).get('token')?.value
-  // console.log("Cookie value: ", cookie)
   const payload = await decrypt(cookie) as tokenPayload | undefined
  
   // 5. Redirect to /login if the user is not authenticated
-  if (isProtectedRoute && !payload?.username) {
-    return NextResponse.redirect(new URL('/', req.nextUrl))
-  }
+  if (isProtectedRoute && !payload?.username) return NextResponse.redirect(new URL('/', req.nextUrl))
  
   // 6. Redirect to /dashboard if the user is authenticated
   if (
     isPublicRoute &&
     payload?.username &&
     !req.nextUrl.pathname.startsWith('/dashboard')
-  ) {
-    return NextResponse.redirect(new URL('/dashboard', req.nextUrl))
-  }
+  ) return NextResponse.redirect(new URL('/dashboard', req.nextUrl))
  
   return NextResponse.next()
 }

@@ -3,6 +3,10 @@ import { useRouter } from "next/navigation";
 import * as service from "@/services/reservationService";
 import { ReservationFormValues, Options } from "@/types/reservationType";
 import { useIsMobile } from "@/components/ui/use-mobile";
+import { reservationSchema } from "@/app/lib/zod";
+import { ZodError } from "zod";
+
+type FieldErrors = Partial<Record<keyof ReservationFormValues, string>>;
 
 export function useReservationForm({ id, initialValues }: Options = {}) {
   const router = useRouter();
@@ -11,9 +15,11 @@ export function useReservationForm({ id, initialValues }: Options = {}) {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | string>("all");
   const [loading, setLoading] = useState(true);
+  const [errors, setErrors] = useState<FieldErrors>({});
+  const [error, setError] = useState<string | null>(null);
   const isMobile = useIsMobile();
 
-  // ==== FETCH LIST ====
+  // Fetch all reservations
   useEffect(() => {
     setLoading(true);
     service
@@ -24,9 +30,9 @@ export function useReservationForm({ id, initialValues }: Options = {}) {
         setReservations([]);
       })
       .finally(() => setLoading(false));
-  }, []); // [] artinya hanya sekali saat mount
+  }, []);
 
-  // ==== FILTER & SEARCH MEMOIZED ====
+  // Filter and search
   const filtered = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     return reservations.filter((r) => {
@@ -38,10 +44,15 @@ export function useReservationForm({ id, initialValues }: Options = {}) {
         r.status.toLowerCase().includes(q);
       const matchesStatus = statusFilter === "all" || r.status === statusFilter;
       return matchesSearch && matchesStatus;
-    });
+    })
+    .sort((a, b) => {
+      const dateA = new Date((a as any)?.createdAt ?? 0).getTime();
+      const dateB = new Date((b as any)?.createdAt ?? 0).getTime();
+      return dateB - dateA;
+    })
   }, [reservations, searchQuery, statusFilter]);
 
-  // ==== FORM HANDLING (untouched) ====
+  // Default form values
   const defaultForm: ReservationFormValues = {
     nik: 0,
     name: "",
@@ -57,6 +68,7 @@ export function useReservationForm({ id, initialValues }: Options = {}) {
     admin_id: "",
   };
 
+  // Initialize form state
   const [form, setForm] = useState<ReservationFormValues>(() => {
     if (initialValues) {
       return {
@@ -69,7 +81,8 @@ export function useReservationForm({ id, initialValues }: Options = {}) {
   });
 
   const [fetching, setFetching] = useState(isEdit);
-  const [error, setError] = useState<string | null>(null);
+
+  // Fetch single reservation if editing
   useEffect(() => {
     if (!isEdit || !id) return;
     setFetching(true);
@@ -86,34 +99,53 @@ export function useReservationForm({ id, initialValues }: Options = {}) {
       .finally(() => setFetching(false));
   }, [id, isEdit]);
 
+  // Submit handler with Zod validation
   const submit = async () => {
-    setLoading(true);
+    setErrors({});
     setError(null);
+    setLoading(true);
+
     try {
-      const payload = {
+      // Parse and coerce types
+      const parsed = reservationSchema.parse({
         ...form,
-        date: new Date(form.date),
-      };
-  
+        // ensure date is Date
+        date: form.date instanceof Date ? form.date : new Date(form.date),
+      });
+
+      const payload: ReservationFormValues = parsed as ReservationFormValues;
+
       if (isEdit && id) {
         await service.updateReservation(id, payload);
       } else {
         await service.addReservation(payload);
       }
-  
+
       router.push("/dashboard/reservations");
-    } catch (error: any) {
-      console.error("Submission error:", error);
-      setError(error.message || (isEdit ? "Gagal memperbarui reservasi" : "Gagal membuat reservasi"));
+    } catch (err) {
+      if (err instanceof ZodError) {
+        const fieldErrors: FieldErrors = {};
+        err.errors.forEach((e) => {
+          const key = e.path[0] as keyof ReservationFormValues;
+          if (!fieldErrors[key]) fieldErrors[key] = e.message;
+        });
+        setErrors(fieldErrors);
+      } else {
+        console.error("Submission error:", err);
+        setError(
+          (err as Error).message || (isEdit ? "Gagal memperbarui reservasi" : "Gagal membuat reservasi")
+        );
+      }
     } finally {
       setLoading(false);
     }
   };
-  
+
   return {
     filtered,
     form,
     setForm,
+    errors,
     submit,
     isEdit,
     fetching,

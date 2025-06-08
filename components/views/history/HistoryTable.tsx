@@ -7,6 +7,7 @@ import { Search, Settings2Icon } from "lucide-react"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useHistoryForm } from "@/hooks/useHistoryForm"
+import { getTypeClasses, TYPE_BASE_CLASSES } from "@/components/ui/status-badge"
 
 export function HistoryTable() {
   const { histories, loading } = useHistoryForm()
@@ -16,16 +17,31 @@ export function HistoryTable() {
 
   const filtered = useMemo(() => {
     const q = searchQuery.trim().toLowerCase()
-    return histories.filter((h) => {
-      const refId = String(h.reference_id).toLowerCase()
-      const matchesSearch =
-        refId.includes(q) ||
-        h.description.toLowerCase().includes(q) ||
-        h.actor.toLowerCase().includes(q)
-      const matchesType = typeFilter === "all" || h.reference_type === typeFilter
-      return matchesSearch && matchesType
-    })
+    return histories
+      .filter((h) => {
+        const refId = String(h.reference_id).toLowerCase()
+        const matchesSearch =
+          refId.includes(q) ||
+          h.description.toLowerCase().includes(q) ||
+          h.actor.toLowerCase().includes(q)
+        const matchesType = typeFilter === "all" || h.reference_type === typeFilter
+        return matchesSearch && matchesType
+      })
+      // Urutkan berdasarkan tanggal (terbaru ke terlama)
+      .sort((a, b) => {
+        const dateA = new Date(a.date).getTime()
+        const dateB = new Date(b.date).getTime()
+        return dateB - dateA
+      })
   }, [histories, searchQuery, typeFilter])
+
+  const formatDate = (date: Date | string) => {
+    const d = new Date(date);
+    const day = d.getDate();
+    const month = d.getMonth() + 1;
+    const year = d.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
 
   return (
     <div className="bg-white rounded-lg shadow p-6">
@@ -57,39 +73,41 @@ export function HistoryTable() {
         </div>
       </div>
 
-      <div className="overflow-x-auto">
-        <Table>
-          <TableHeader className="bg-[#E7E7E7] text-[#888888] rounded-t-xl">
-            <TableRow>
-              <TableHead>No. History</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>Date</TableHead>
-              <TableHead>Description</TableHead>
-              <TableHead>Actor</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
+      <div className="overflow-x-auto bg-white rounded-xl shadow">
+        <table className="min-w-full rounded-lg bg-white overflow-hidden">
+          <thead className="bg-gray-300">
+            <tr>
+              <th className="px-4 py-2 text-left">Date</th>
+              <th className="px-4 py-2 text-left">Type</th>
+              <th className="px-4 py-2 text-left">Description</th>
+              <th className="px-4 py-2 text-left">Actor</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-200">
             {loading ? (
-              <TableRow>
-                <TableCell colSpan={5} className="text-center py-8">Loading...</TableCell>
-              </TableRow>
+              <tr>
+                <td colSpan={5} className="px-4 py-2 text-center">Please wait, loading...</td>
+              </tr>
             ) : filtered.length ? (
-              filtered.map((h) => (
-                <TableRow key={h._id} className="hover:bg-gray-50">
-                  <TableCell>{h.reference_id}</TableCell>
-                  <TableCell>{h.reference_type}</TableCell>
-                  <TableCell>{new Date(h.date).toLocaleDateString()}</TableCell>
-                  <TableCell>{h.description}</TableCell>
-                  <TableCell>{h.actor}</TableCell>
-                </TableRow>
+              filtered.map((h, index) => (
+                <tr key={h._id}>
+                  <td className="px-4 py-2 h-13">{formatDate(h.date)}</td>
+                  <td className="px-4 py-2 h-13">
+                    <span className={`${TYPE_BASE_CLASSES} ${getTypeClasses(h.reference_type)}`}>
+                      {h.reference_type}
+                    </span>
+                  </td>
+                  <td className="px-4 py-2 h-13">{h.description}</td>
+                  <td className="px-4 py-2 h-13">{h.actor}</td>
+                </tr>
               ))
             ) : (
-              <TableRow>
-                <TableCell colSpan={5} className="text-center py-8">No history found.</TableCell>
-              </TableRow>
+              <tr>
+                <td colSpan={5} className="px-4 py-2 text-center">No history found</td>
+              </tr>
             )}
-          </TableBody>
-        </Table>
+          </tbody>
+        </table>
       </div>
     </div>
   )

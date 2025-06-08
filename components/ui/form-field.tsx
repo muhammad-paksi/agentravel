@@ -7,8 +7,7 @@ interface FormFieldProps {
   value: string | number;
   placeholder?: string;
   onChange: (val: string) => void;
-  readOnly?: boolean;
-  disabled?: boolean;
+  error?: string;
 }
 
 export function FormField({ 
@@ -16,22 +15,25 @@ export function FormField({
   type = "text", 
   value, 
   placeholder, 
-  onChange, 
-  readOnly = false,
-  disabled = false,
+  onChange,
+  error,
+
 }: FormFieldProps) {
   return (
     <div>
       <label className="block text-sm font-medium mb-1">{label}</label>
       <Input
-        className="text-gray-600 border-b border-gray-300 font-normal"
+        className={`text-gray-600 border-b border-gray-300 font-normal ${error ? "border-red-500" : "border-gray-300"}`}
         type={type}
         value={value}
         placeholder={placeholder}
         onChange={e => onChange(e.target.value)}
-        readOnly={readOnly}
-        disabled={disabled}
       />
+      {error && (
+        <p className="mt-1 text-sm text-red-600">
+          {error}
+        </p>
+      )}
     </div>
   );
 }
