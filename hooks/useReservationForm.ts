@@ -44,7 +44,12 @@ export function useReservationForm({ id, initialValues }: Options = {}) {
         r.status.toLowerCase().includes(q);
       const matchesStatus = statusFilter === "all" || r.status === statusFilter;
       return matchesSearch && matchesStatus;
-    });
+    })
+    .sort((a, b) => {
+      const dateA = new Date((a as any)?.createdAt ?? 0).getTime();
+      const dateB = new Date((b as any)?.createdAt ?? 0).getTime();
+      return dateB - dateA;
+    })
   }, [reservations, searchQuery, statusFilter]);
 
   // Default form values

@@ -52,7 +52,8 @@ export function useInvoiceForm({ id, initialValues }: Options = {}) {
   // ==== FILTER & SEARCH MEMOIZED ====
   const filtered = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
-    return invoices.filter((inv) => {
+    return invoices
+    .filter((inv) => {
       // Check if reservation exists
       const reservationTicketId = inv.reservation?.ticket_id 
         ? String(inv.reservation.ticket_id).toLowerCase() 
@@ -87,7 +88,12 @@ export function useInvoiceForm({ id, initialValues }: Options = {}) {
       
       const matchesStatus = statusFilter === "all" || inv.status === statusFilter;
       return matchesSearch && matchesStatus;
-    });
+    })
+    .sort((a, b) => {
+      const dateA = new Date((a as any).createdAt || 0).getTime();
+      const dateB = new Date((b as any).createdAt || 0).getTime();
+      return dateB - dateA; // Sort by newest first
+    })
   }, [invoices, searchQuery, statusFilter, reservationDetails]);
 
   // ==== FORM HANDLING ====
