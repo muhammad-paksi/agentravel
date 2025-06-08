@@ -7,6 +7,7 @@ import { Search, Settings2Icon } from "lucide-react"
 import { useIsMobile } from "@/hooks/use-mobile"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useHistoryForm } from "@/hooks/useHistoryForm"
+import { getTypeClasses, TYPE_BASE_CLASSES } from "@/components/ui/status-badge"
 
 export function HistoryTable() {
   const { histories, loading } = useHistoryForm()
@@ -16,15 +17,22 @@ export function HistoryTable() {
 
   const filtered = useMemo(() => {
     const q = searchQuery.trim().toLowerCase()
-    return histories.filter((h) => {
-      const refId = String(h.reference_id).toLowerCase()
-      const matchesSearch =
-        refId.includes(q) ||
-        h.description.toLowerCase().includes(q) ||
-        h.actor.toLowerCase().includes(q)
-      const matchesType = typeFilter === "all" || h.reference_type === typeFilter
-      return matchesSearch && matchesType
-    })
+    return histories
+      .filter((h) => {
+        const refId = String(h.reference_id).toLowerCase()
+        const matchesSearch =
+          refId.includes(q) ||
+          h.description.toLowerCase().includes(q) ||
+          h.actor.toLowerCase().includes(q)
+        const matchesType = typeFilter === "all" || h.reference_type === typeFilter
+        return matchesSearch && matchesType
+      })
+      // Urutkan berdasarkan tanggal (terbaru ke terlama)
+      .sort((a, b) => {
+        const dateA = new Date(a.date).getTime()
+        const dateB = new Date(b.date).getTime()
+        return dateB - dateA
+      })
   }, [histories, searchQuery, typeFilter])
 
   const formatDate = (date: Date | string) => {
@@ -69,9 +77,8 @@ export function HistoryTable() {
         <table className="min-w-full rounded-lg bg-white overflow-hidden">
           <thead className="bg-gray-300">
             <tr>
-              <th className="px-4 py-2 text-left">No. History</th>
-              <th className="px-4 py-2 text-left">Type</th>
               <th className="px-4 py-2 text-left">Date</th>
+              <th className="px-4 py-2 text-left">Type</th>
               <th className="px-4 py-2 text-left">Description</th>
               <th className="px-4 py-2 text-left">Actor</th>
             </tr>
@@ -84,9 +91,12 @@ export function HistoryTable() {
             ) : filtered.length ? (
               filtered.map((h, index) => (
                 <tr key={h._id}>
-                  <td className="px-4 py-2 h-13">{index + 1}</td>
-                  <td className="px-4 py-2 h-13">{h.reference_type}</td>
                   <td className="px-4 py-2 h-13">{formatDate(h.date)}</td>
+                  <td className="px-4 py-2 h-13">
+                    <span className={`${TYPE_BASE_CLASSES} ${getTypeClasses(h.reference_type)}`}>
+                      {h.reference_type}
+                    </span>
+                  </td>
                   <td className="px-4 py-2 h-13">{h.description}</td>
                   <td className="px-4 py-2 h-13">{h.actor}</td>
                 </tr>
