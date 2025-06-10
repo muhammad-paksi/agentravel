@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import { Reservasi, LogTransaksi } from "@/database/model/all";
+import Invois from "@/database/model/invois";
 
 const reservasi = new Hono();
 
@@ -74,6 +75,9 @@ reservasi
   .put("/:id", async (c) => {
     const body = await c.req.json();
     const { id } = c.req.param();
+    if (body.status == "Canceled") {
+
+    }
     const data = await Reservasi.findByIdAndUpdate(id, body, { new: true });
     return c.json({ status: "berhasil", data });
   })
@@ -92,6 +96,21 @@ reservasi
         reference_id: reservasi.ticket_id,
         reference_type: "Reservation",
       });
+      
+      const reservasiToCancel = await Reservasi.findById(id);
+      const relatedInvoice = await Invois.findOne({ reservation_id: id });
+
+      // 3. Jika invois yang terkait ditemukan, kurangi `total_amount`.
+      if (relatedInvoice) {
+        // Gunakan operator $inc untuk mengurangi nilai secara atomik.
+        // Ini lebih aman daripada mengambil data, menghitung di JS, lalu menyimpan kembali.
+        await Invois.updateOne(
+          { _id: relatedInvoice._id },
+          { $inc: { total_amount: -reservasiToCancel.total_price } }
+        );
+        // Anda juga bisa mempertimbangkan untuk mengurangi `fee` jika perlu
+        // { $inc: { total_amount: -reservasiToCancel.total_price, fee: -biaya_admin_lain } }
+      }
 
       // Hapus reservasi
       await Reservasi.findByIdAndDelete(id);

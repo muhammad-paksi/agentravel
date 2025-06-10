@@ -23,7 +23,14 @@ export default async function middleware(req: NextRequest) {
  
   // 5. Redirect to /login if the user is not authenticated
   if (isProtectedRoute && !payload?.username) return NextResponse.redirect(new URL('/', req.nextUrl))
- 
+
+  // 6. Redirect to /dashboard if the user is not an admin
+  if (
+    payload?.role === 'Tim Keuangan' &&
+    path === '/dashboard/reservations'
+  ) {
+    return NextResponse.redirect(new URL('/dashboard', req.nextUrl));
+  }
   // 6. Redirect to /dashboard if the user is authenticated
   if (
     isPublicRoute &&

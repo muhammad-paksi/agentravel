@@ -73,6 +73,13 @@ autentikasi
                 sameSite: 'lax',
                 path: '/',
             })
+            // cookie.set('role', payload?.role || '', {
+            //     httpOnly: false,
+            //     secure: false,
+            //     expires: new Date(Date.now() + 3 /* 3 days */ * 24 * 60 * 60 * 1000),
+            //     sameSite: 'lax',
+            //     path: '/',
+            // })
             cookie.set('token', token, {
                 httpOnly: true,
                 secure: false,

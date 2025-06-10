@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent } from "@/components/ui/sheet"
 import { useIsMobile } from "@/hooks/use-mobile"
 
-export function Sidebar() {
+export function Sidebar2() {
   const pathname = usePathname()
   const isMobile = useIsMobile()
   const [isOpen, setIsOpen] = useState(false)
@@ -20,7 +20,6 @@ export function Sidebar() {
 
   const navItems = [
     { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-    { name: "Reservations", href: "/dashboard/reservations", icon: CalendarClock },
     { name: "Invoices", href: "/dashboard/invoices", icon: FileText },
     { name: "History", href: "/dashboard/history", icon: History },
     { name: "Reports", href: "/dashboard/reports", icon: BarChart3 },
