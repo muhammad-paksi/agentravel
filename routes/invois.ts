@@ -3,6 +3,35 @@ import { Invois, Laporan, LogTransaksi, Reservasi } from '@/database/model/all';
 
 const invois = new Hono();
 
+// Fungsi utama untuk membuat laporan dari invoice
+async function createReportsFromInvoice(invoice: any, isUpdate: boolean = false) {
+  console.log(`Processing invoice ${invoice._id} with status ${invoice.status}`);
+
+  const populatedInvoice = await Invois.findById(invoice._id).populate({
+    path: 'reservation_id',
+    model: 'reservasi'
+  });
+
+  if (!populatedInvoice) {
+    console.log('Invoice not found');
+    return;
+  }
+
+  const customer_name = populatedInvoice.customer_name || 
+                       (populatedInvoice.reservation_id[0]?.name || 'pelanggan');
+  
+  const existingReports = await Laporan.find({ invoice_ref: invoice._id });
+
+  if (populatedInvoice.status === 'Paid' && !existingReports.some(r => r.type === 'Income')) {
+    await createIncomeReport(populatedInvoice, customer_name);
+  }
+
+  if (populatedInvoice.status === 'Unpaid' && !existingReports.some(r => r.type === 'Expense')) {
+    await createExpenseReport(populatedInvoice, customer_name);
+  }
+}
+
+// Fungsi untuk membuat laporan Income (pemasukan) saat invoice dibayar / status diubah menjadi paid
 async function createIncomeReport(invoice: any, customer_name: string) {
   const incomeReport = new Laporan({
     amount: invoice.total_price || (invoice.total_amount + (invoice.fee || 0)),
@@ -15,11 +44,12 @@ async function createIncomeReport(invoice: any, customer_name: string) {
   console.log('Income report created:', incomeReport);
 }
 
+// Fungsi untuk membuat laporan Expense (pengeluaran) saat invoice dibuat dengan status Unpaid
 async function createExpenseReport(invoice: any, customer_name: string) {
   const expenseReport = new Laporan({
     amount: invoice.total_amount,
     type: 'Expense',
-    description: `Pemesanan untuk ${customer_name}`,
+    description: `Pemesanan untuk ${customer_name}`, // Gunakan parameter customer_name
     invoice_ref: invoice._id,
     created_by: 'system',
   });
@@ -42,7 +72,7 @@ async function logInvoiceStatusChange(invoice: any) {
 
   // Get the ticket_id from the reservation
   const ticketId = populatedInvoice.reservation_id[0]?.ticket_id || 'unknown';
-const customer_name = populatedInvoice.customer_name || 'pelanggan';
+  const customer_name = populatedInvoice.customer_name || 'pelanggan';
 
   const logTransaksi = new LogTransaksi({
     reference_id: invoice._id, // Use the ticket_id instead of invoice._id
@@ -56,75 +86,46 @@ const customer_name = populatedInvoice.customer_name || 'pelanggan';
   console.log('Log transaksi berhasil disimpan');
 }
 
-async function createReportsFromInvoice(invoice: any, isUpdate: boolean = false) {
-  console.log(`Processing invoice ${invoice._id} with status ${invoice.status}`);
-
-  const populatedInvoice = await Invois.findById(invoice._id).populate({
-    path: 'reservation_id',
-    model: 'reservasi'
-  });
-
-  if (!populatedInvoice) {
-    console.log('Invoice not found');
-    return;
-  }
-
-  const customer_name = populatedInvoice.reservation_id?.name || 'pelanggan';
-  const existingReports = await Laporan.find({ invoice_ref: invoice._id });
-
-  if (populatedInvoice.status === 'Paid' && !existingReports.some(r => r.type === 'Income')) {
-    await createIncomeReport(populatedInvoice, customer_name);
-  }
-
-  if (populatedInvoice.status === 'Unpaid' && !existingReports.some(r => r.type === 'Expense')) {
-    await createExpenseReport(populatedInvoice, customer_name);
-  }
-}
-
 invois
-  /* POST LAMA
-  .post("/", async c => {
-    const body = await c.req.json();
-    const baru = new Invois(body);
-    await baru.save();
-
-    const invoiceWithReservation = await Invois.findById(baru._id).populate('reservation_id');
-    await createReportsFromInvoice(invoiceWithReservation || baru);
-
-    return c.json({ message: "Invois dibuat", data: baru });
-  })
-  */
-  // POST BARU
   .post("/", async (c) => {
     try {
-    const body = await c.req.json();
-    if (!body.customer_name || !body.reservation_id || !Array.isArray(body.reservation_id) || body.reservation_id.length === 0) {
-      return c.json({ message: "Nama pelanggan dan minimal satu reservasi wajib diisi." }, 400);
-    }
-    
-    const invoiceBaru = new Invois(body);
+      const body = await c.req.json();
+      // Pastikan customer_name dan reservation_id ada
+      if (!body.customer_name || !body.reservation_id || !Array.isArray(body.reservation_id) || body.reservation_id.length === 0) {
+        return c.json({ message: "Nama pelanggan dan minimal satu reservasi wajib diisi." }, 400);
+      }
+      
+      const invoiceBaru = new Invois(body);
+      await invoiceBaru.save();
 
-    await invoiceBaru.save();
+      // Dapatkan data lengkap dengan populate
+      const dataLengkap = await Invois.findById(invoiceBaru._id).populate({
+        path: 'reservation_id',
+        model: 'reservasi'
+      });
 
-    const dataLengkap = await Invois.findById(invoiceBaru._id).populate('reservation_id');
+      // Panggil createReportsFromInvoice untuk membuat laporan expense jika status Unpaid
+      if (dataLengkap) {
+        await createReportsFromInvoice(dataLengkap);
+      }
 
-    return c.json({
-      message: "Invoice berhasil dibuat",
-      data: dataLengkap
-    }, 201);
-
-  } catch (error: any) {
-    if (error.name === 'ValidationError') {
       return c.json({
-        message: 'Validasi gagal',
-        errors: error.errors
-      }, 400);
+        message: "Invoice berhasil dibuat",
+        data: dataLengkap
+      }, 201);
+
+    } catch (error: any) {
+      if (error.name === 'ValidationError') {
+        return c.json({
+          message: 'Validasi gagal',
+          errors: error.errors
+        }, 400);
+      }
+      
+      console.error("Error saat membuat invoice:", error);
+      return c.json({ message: "Terjadi kesalahan pada server" }, 500);
     }
-    
-    console.error("Error saat membuat invoice:", error);
-    return c.json({ message: "Terjadi kesalahan pada server" }, 500);
-  }
-})
+  })
     /**
      * Contoh isi body invois baru yang berisi dua reservasi:
      * {
