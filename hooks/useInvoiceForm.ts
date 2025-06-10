@@ -132,12 +132,19 @@ export function useInvoiceForm({ id }: UseInvoiceFormOptions = {}) {
 
   // ==== DATA YANG DIKEMBALIKAN ====
   const filteredInvoices = useMemo(() => {
-    return invoices.filter(inv => {
-      const q = searchQuery.trim().toLowerCase();
-      const statusMatch = statusFilter === 'all' || inv.status === statusFilter;
-      const searchMatch = inv.customer_name?.toLowerCase().includes(q);
-      return statusMatch && searchMatch;
-    });
+      return invoices
+        .filter(inv => {
+          const q = searchQuery.trim().toLowerCase();
+          const statusMatch = statusFilter === 'all' || inv.status === statusFilter;
+          const searchMatch = inv.customer_name?.toLowerCase().includes(q);
+          return statusMatch && searchMatch;
+        })
+        .sort((a, b) => {
+          // Urutkan berdasarkan createdAt descending (terbaru pertama)
+          const dateA = new Date(a.createdAt).getTime();
+          const dateB = new Date(b.createdAt).getTime();
+          return dateB - dateA; // Descending order
+        });
   }, [invoices, searchQuery, statusFilter]);
 
   const handleExportSinglePdf = async (invoiceId: string) => {
