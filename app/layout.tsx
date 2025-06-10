@@ -1,7 +1,7 @@
 import "./globals.css";
 import { Inter } from "next/font/google";
 import { ThemeProvider } from "next-themes";
-
+import LoadingIndicator from "@/components/views/loading-indicator";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
@@ -18,6 +18,7 @@ export default function RootLayout({
     // suppressHydrationWarning meredam perbedaan kecil HTML saat hydrate
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
+        <LoadingIndicator />
         <ThemeProvider
           attribute="class"
           defaultTheme="light"
