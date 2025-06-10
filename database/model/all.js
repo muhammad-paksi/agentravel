@@ -35,7 +35,7 @@ const reservasiSchema = new mongoose.Schema(
     checkInDate      : { type: Date, required: false },       
     estimated_budget : { type: Number, required: false },
     hotel_name       : { type: String, required: false },
-    room_price     : { type: Number, required: false },
+    room_price       : { type: Number, required: false },
     // total_price menyimpan hasil ticket_price + room_price, jika hotel tidak ada maka total_price = ticket_price
     total_price      : { type: Number, required: true },
     

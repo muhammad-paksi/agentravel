@@ -11,114 +11,127 @@ type FieldErrors = Partial<Record<keyof ReservationFormValues, string>>;
 export function useReservationForm({ id, initialValues }: Options = {}) {
   const router = useRouter();
   const isEdit = Boolean(id);
+  const isMobile = useIsMobile();
+
   const [reservations, setReservations] = useState<ReservationFormValues[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | string>("all");
+
   const [loading, setLoading] = useState(true);
+  const [fetching, setFetching] = useState(isEdit);
   const [errors, setErrors] = useState<FieldErrors>({});
   const [error, setError] = useState<string | null>(null);
-  const isMobile = useIsMobile();
 
-  // Fetch all reservations
-  useEffect(() => {
-    setLoading(true);
-    service
-      .listReservations()
-      .then((res) => setReservations(res.data))
-      .catch((err) => {
-        console.error(err);
-        setReservations([]);
-      })
-      .finally(() => setLoading(false));
-  }, []);
-
-  // Filter and search
-  const filtered = useMemo(() => {
-    const q = searchQuery.trim().toLowerCase();
-    return reservations.filter((r) => {
-      const ticketStr = String(r.ticket_id).toLowerCase();
-      const matchesSearch =
-        ticketStr.includes(q) ||
-        r.name.toLowerCase().includes(q) ||
-        r.destination.toLowerCase().includes(q) ||
-        r.status.toLowerCase().includes(q);
-      const matchesStatus = statusFilter === "all" || r.status === statusFilter;
-      return matchesSearch && matchesStatus;
-    })
-    .sort((a, b) => {
-      const dateA = new Date((a as any)?.createdAt ?? 0).getTime();
-      const dateB = new Date((b as any)?.createdAt ?? 0).getTime();
-      return dateB - dateA;
-    })
-  }, [reservations, searchQuery, statusFilter]);
-
-  // Default form values
-  const defaultForm: ReservationFormValues = {
+  const defaultForm: ReservationFormValues = useMemo(() => ({
     nik: 0,
     name: "",
     contact: "",
+    type: "flight",
     ticket_id: 0,
     destination: "",
-    date: new Date(),
-    estimated_budget: 0,
+    departure_date: new Date(),
+    transport_type: "Plane",
+    carrier_name: "",
+    ticket_price: 0,
+    total_persons: undefined,
+    checkInDate: undefined,
+    hotel_name: undefined,
+    room_price: undefined,
+    estimated_budget: undefined,
     total_price: 0,
     payment_method: "Prepaid",
     payment_status: "Pending",
     status: "Booked",
     admin_id: "",
-  };
+  }), []);
 
-  // Initialize form state
   const [form, setForm] = useState<ReservationFormValues>(() => {
     if (initialValues) {
       return {
         ...defaultForm,
         ...initialValues,
-        date: initialValues.date ? new Date(initialValues.date) : new Date(),
+        departure_date: initialValues.departure_date ? new Date(initialValues.departure_date) : new Date(),
+        checkInDate: initialValues.checkInDate ? new Date(initialValues.checkInDate) : undefined,
       };
     }
     return defaultForm;
   });
 
-  const [fetching, setFetching] = useState(isEdit);
-
-  // Fetch single reservation if editing
+  useEffect(() => {
+    setLoading(true);
+    service.listReservations()
+      .then((res) => setReservations(res.data))
+      .catch((err) => {
+        console.error("Failed to list reservations:", err);
+        setReservations([]);
+        setError("Gagal memuat daftar reservasi.");
+      })
+      .finally(() => setLoading(false));
+  }, []);
+  
   useEffect(() => {
     if (!isEdit || !id) return;
     setFetching(true);
-    service
-      .getReservation(id)
+    service.getReservation(id)
       .then((data) => {
         setForm({
           ...defaultForm,
           ...data,
-          date: new Date(data.date),
+          departure_date: new Date(data.departure_date),
+          checkInDate: data.checkInDate ? new Date(data.checkInDate) : undefined,
         });
       })
-      .catch((err) => setError(err.message || "Failed to load reservation"))
+      .catch((err) => setError(err.message || "Gagal memuat data reservasi."))
       .finally(() => setFetching(false));
-  }, [id, isEdit]);
+  }, [id, isEdit, defaultForm]);
 
-  // Submit handler with Zod validation
+  useEffect(() => {
+    const ticketPrice = Number(form.ticket_price) || 0;
+    const roomPrice = Number(form.room_price) || 0;
+    setForm(currentForm => ({
+      ...currentForm,
+      total_price: ticketPrice + roomPrice,
+    }));
+  }, [form.ticket_price, form.room_price]);
+
+  const filteredData = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    return reservations
+      .filter((r) => {
+        const matchesSearch =
+          String(r.ticket_id).toLowerCase().includes(q) ||
+          r.name.toLowerCase().includes(q) ||
+          r.destination.toLowerCase().includes(q) ||
+          r.carrier_name.toLowerCase().includes(q) || // Added carrier_name to search
+          r.status.toLowerCase().includes(q);
+        const matchesStatus = statusFilter === "all" || r.status === statusFilter;
+        return matchesSearch && matchesStatus;
+      })
+      .sort((a, b) => {
+        // Sort by creation date, newest first
+        const dateA = new Date((a as any)?.createdAt ?? 0).getTime();
+        const dateB = new Date((b as any)?.createdAt ?? 0).getTime();
+        return dateB - dateA;
+      });
+  }, [reservations, searchQuery, statusFilter]);
+
   const submit = async () => {
     setErrors({});
     setError(null);
     setLoading(true);
 
     try {
-      // Parse and coerce types
-      const parsed = reservationSchema.parse({
+      const validatedData = reservationSchema.parse({
         ...form,
-        // ensure date is Date
-        date: form.date instanceof Date ? form.date : new Date(form.date),
+        departure_date: form.departure_date instanceof Date ? form.departure_date : new Date(form.departure_date),
+        checkInDate: form.checkInDate ? (form.checkInDate instanceof Date ? form.checkInDate : new Date(form.checkInDate)) : undefined,
       });
-
-      const payload: ReservationFormValues = parsed as ReservationFormValues;
+      const payload: Partial<ReservationFormValues> = validatedData;
 
       if (isEdit && id) {
         await service.updateReservation(id, payload);
       } else {
-        await service.addReservation(payload);
+        await service.addReservation(payload as ReservationFormValues);
       }
 
       router.push("/dashboard/reservations");
@@ -132,9 +145,7 @@ export function useReservationForm({ id, initialValues }: Options = {}) {
         setErrors(fieldErrors);
       } else {
         console.error("Submission error:", err);
-        setError(
-          (err as Error).message || (isEdit ? "Gagal memperbarui reservasi" : "Gagal membuat reservasi")
-        );
+        setError((err as Error).message || (isEdit ? "Gagal memperbarui reservasi" : "Gagal membuat reservasi"));
       }
     } finally {
       setLoading(false);
@@ -142,7 +153,6 @@ export function useReservationForm({ id, initialValues }: Options = {}) {
   };
 
   return {
-    filtered,
     form,
     setForm,
     errors,
@@ -151,7 +161,7 @@ export function useReservationForm({ id, initialValues }: Options = {}) {
     fetching,
     error,
     loading,
-    data: filtered,
+    data: filteredData,
     searchQuery,
     setSearchQuery,
     statusFilter,

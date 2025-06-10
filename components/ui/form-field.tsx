@@ -8,6 +8,7 @@ interface FormFieldProps {
   placeholder?: string;
   onChange: (val: string) => void;
   error?: string;
+  readonly?: boolean;
   disabled?: boolean;
 }
 
@@ -18,6 +19,7 @@ export function FormField({
   placeholder, 
   onChange,
   error,
+  readonly = false,
   disabled = false,
 }: FormFieldProps) {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -35,6 +37,7 @@ export function FormField({
         value={value ?? ''}
         placeholder={placeholder}
         onChange={handleChange}
+        readOnly={readonly}
         disabled={disabled}
       />
       {error && (

@@ -1,10 +1,24 @@
 import { ReservationFormValues, ApiResponse, Options, PagedResult, ReservationFilters } from "@/types/reservationType";
-import { useMemo } from "react";
 
 const BASE_URL = "/api/reservasi";
 
+const buildFilterParams = (filters: Partial<Options & ReservationFilters>): URLSearchParams => {
+  const params = new URLSearchParams();
+
+  if (filters.page) params.append("page", filters.page.toString());
+  if (filters.limit) params.append("limit", filters.limit.toString());
+  if (filters.search) params.append("search", filters.search);
+  if (filters.status) params.append("status", filters.status);
+  if (filters.payment_status) params.append("payment_status", filters.payment_status);
+  if ((filters as any).type) params.append("type", (filters as any).type);
+  if ((filters as any).transport_type) params.append("transport_type", (filters as any).transport_type);
+
+  return params;
+};
+
 export async function getAllReservations(filters: ReservationFilters): Promise<ReservationFormValues[]> {
-  const res = await fetch(BASE_URL);
+  const params = buildFilterParams(filters);
+  const res = await fetch(`${BASE_URL}?${params.toString()}`);
   if (!res.ok) {
     throw new Error(`Failed to fetch reservations: ${res.statusText}`);
   }
@@ -12,9 +26,7 @@ export async function getAllReservations(filters: ReservationFilters): Promise<R
   return json.data;
 }
 
-export async function getReservation(
-  id: string
-): Promise<ReservationFormValues> {
+export async function getReservation(id: string): Promise<ReservationFormValues> {
   const res = await fetch(`${BASE_URL}/${id}`);
   if (!res.ok) {
     throw new Error(`Failed to fetch reservation ${id}: ${res.statusText}`);
@@ -24,25 +36,22 @@ export async function getReservation(
 }
 
 export async function addReservation(payload: ReservationFormValues): Promise<ReservationFormValues> {
-  const res = await fetch("/api/reservasi", {
+  const res = await fetch(BASE_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
 
-  const contentType = res.headers.get("content-type");
-
   if (!res.ok) {
+    const contentType = res.headers.get("content-type");
     let message = "Gagal membuat reservasi";
 
     if (contentType?.includes("application/json")) {
       const err = await res.json();
       message = err.message || message;
     } else {
-      const text = await res.text();
-      message = text || message;
+      message = await res.text() || message;
     }
-
     throw new Error(message);
   }
 
@@ -50,29 +59,23 @@ export async function addReservation(payload: ReservationFormValues): Promise<Re
   return json.data;
 }
 
-export async function updateReservation(
-  id: string,
-  payload: Partial<ReservationFormValues>
-): Promise<ReservationFormValues> {
+export async function updateReservation(id: string, payload: Partial<ReservationFormValues>): Promise<ReservationFormValues> {
   const res = await fetch(`${BASE_URL}/${id}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
-
-  const contentType = res.headers.get("content-type");
-
+  
   if (!res.ok) {
+    const contentType = res.headers.get("content-type");
     let message = `Gagal memperbarui reservasi ${id}`;
 
     if (contentType?.includes("application/json")) {
       const err = await res.json();
       message = err.message || message;
     } else {
-      const text = await res.text();
-      message = text || message;
+      message = await res.text() || message;
     }
-
     throw new Error(message);
   }
 
@@ -90,15 +93,12 @@ export async function deleteReservation(id: string): Promise<void> {
 }
 
 export async function listReservations(opts: Options = {}): Promise<PagedResult<ReservationFormValues>> {
-  const params = new URLSearchParams();
-  if (opts.page) params.append("page", opts.page.toString());
-  if (opts.limit) params.append("limit", opts.limit.toString());
-  if (opts.search) params.append("search", opts.search);
-  if (opts.status) params.append("status", opts.status);
-  if (opts.payment_status) params.append("payment_status", opts.payment_status);
+  const params = buildFilterParams(opts);
+  const res = await fetch(`${BASE_URL}?${params.toString()}`);
 
-  const res = await fetch(`/api/reservasi?${params.toString()}`);
-  if (!res.ok) throw new Error("Failed to fetch reservations");
+  if (!res.ok) {
+    throw new Error("Failed to fetch reservations");
+  }
   const json = await res.json() as { data: ReservationFormValues[]; total: number };
   return { data: json.data, total: json.total };
 }

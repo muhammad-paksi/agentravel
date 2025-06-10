@@ -51,18 +51,6 @@ export default function ShowReservation() {
           <DetailItem label="Contact (Phone/Email)" value={reservation.contact} />
         </dl>
       </section>
-
-      <section>
-        <h2 className="text-xl font-bold mb-3">Ticket & Transport Information</h2>
-        <dl className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <DetailItem label="Reservation Type" value={reservation.type} />
-          <DetailItem label="Ticket Number" value={reservation.ticket_id} />
-          <DetailItem label="Destination" value={reservation.destination} />
-          <DetailItem label="Departure Date" value={formatDate(reservation.departure_date)} />
-          <DetailItem label="Transport Type" value={reservation.transport_type} />
-          <DetailItem label="Carrier Name" value={reservation.carrier_name} />
-        </dl>
-      </section>
       
       {/* Conditionally render Hotel Information */}
       {hasHotelInfo && (
@@ -78,16 +66,7 @@ export default function ShowReservation() {
       )}
 
       <section>
-        <h2 className="text-xl font-bold mb-3">Cost Information</h2>
-        <dl className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <DetailItem label="Ticket Price" value={formatCurrency(reservation.ticket_price)} />
-          <DetailItem label="Estimated Budget" value={formatCurrency(reservation.estimated_budget)} />
-          <DetailItem label="Total Price" value={formatCurrency(reservation.total_price)} />
-        </dl>
-      </section>
-
-      <section>
-        <h2 className="text-xl font-bold mb-3">payment & Status</h2>
+        <h2 className="text-xl font-bold mb-3">Payment & Status</h2>
         <dl className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <DetailItem label="Booking Status" value={reservation.status} />
           <DetailItem label="Payment Method" value={reservation.payment_method} />

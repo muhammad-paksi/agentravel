@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import ReservationsDataTable from "@/components/views/reservations/ReservationDataTable"
+import ReservationsDataTableHotel from "@/components/views/reservations/ReservationDataTableHotel"
 import { Button } from "@/components/ui/button"
 import { Plane, House } from "lucide-react"
 
@@ -42,12 +43,12 @@ export default function ReservationsPage() {
         {activeTab === "flight" ? (
           <ReservationsDataTable />
         ) : (
-          <ReservationsDataTable />
+          <ReservationsDataTableHotel />
         )}
 
         {/* Catatan tentang tab yang dipilih */}
         <p className="text-sm text-gray-500 mt-2">
-        Displays reservation data {activeTab === "flight" ? "penerbangan" : "hotel"}.
+        Displays {activeTab === "flight" ? "trip" : "hotel"} reservation data.
         </p>
       </div>
     </div>
