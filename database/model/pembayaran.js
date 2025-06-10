@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 
 const pembayaranSchema = new mongoose.Schema(
     {
-        reservasiId: { type: mongoose.Schema.Types.ObjectId, ref: 'Reservasi', required: true },
+        reservasiId: { type: mongoose.Schema.Types.ObjectId, ref: 'reservasi', required: true },
         jumlah: { type: Number, required: true },
         metode: { type: String, required: true },
         status: { type: String, enum: ['pending', 'berhasil', 'gagal'], default: 'pending' },

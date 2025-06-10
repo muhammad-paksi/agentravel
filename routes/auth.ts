@@ -3,7 +3,7 @@ import { cookies } from 'next/headers'
 import { Hono } from "hono";
 import Pengguna from "@/database/model/pengguna";
 import { encrypt, decrypt } from "@/routes/utils/auth";
-import bcrypt from 'bcryptjs';
+import bcrypt from "bcryptjs";
 
 const autentikasi = new Hono();
 

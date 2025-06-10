@@ -1,5 +1,8 @@
 import { Hono } from 'hono';
 import dbConnect from '@/database/connection/mongodb';
+
+import '@/database/model/all'; 
+
 import pengguna from '@/routes/pengguna';
 import reservasi from '@/routes/reservasi';
 import pembayaran from '@/routes/pembayaran';

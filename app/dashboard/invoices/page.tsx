@@ -7,7 +7,7 @@ export default function InvoicesPage() {
     </div>
     <div>
       <p className="text-sm text-gray-500 mt-2">
-        Menampilkan data invoice.
+        Displays invoice data
       </p>
     </div></>
   )

@@ -3,11 +3,11 @@ import { Invois, Laporan, LogTransaksi, Reservasi } from '@/database/model/all';
 
 const invois = new Hono();
 
-async function createIncomeReport(invoice: any, customerName: string) {
+async function createIncomeReport(invoice: any, customer_name: string) {
   const incomeReport = new Laporan({
     amount: invoice.total_price || (invoice.total_amount + (invoice.fee || 0)),
     type: 'Income',
-    description: `Pembayaran dari ${customerName}`,
+    description: `Pembayaran dari ${customer_name}`,
     invoice_ref: invoice._id,
     created_by: 'system',
   });
@@ -15,11 +15,11 @@ async function createIncomeReport(invoice: any, customerName: string) {
   console.log('Income report created:', incomeReport);
 }
 
-async function createExpenseReport(invoice: any, customerName: string) {
+async function createExpenseReport(invoice: any, customer_name: string) {
   const expenseReport = new Laporan({
     amount: invoice.total_amount,
     type: 'Expense',
-    description: `Pemesanan untuk ${customerName}`,
+    description: `Pemesanan untuk ${customer_name}`,
     invoice_ref: invoice._id,
     created_by: 'system',
   });
@@ -41,7 +41,8 @@ async function logInvoiceStatusChange(invoice: any) {
   }
 
   // Get the ticket_id from the reservation
-  const ticketId = populatedInvoice.reservation_id?.ticket_id || 'unknown';
+  const ticketId = populatedInvoice.reservation_id[0]?.ticket_id || 'unknown';
+const customer_name = populatedInvoice.customer_name || 'pelanggan';
 
   const logTransaksi = new LogTransaksi({
     reference_id: invoice._id, // Use the ticket_id instead of invoice._id
@@ -68,15 +69,15 @@ async function createReportsFromInvoice(invoice: any, isUpdate: boolean = false)
     return;
   }
 
-  const customerName = populatedInvoice.reservation_id?.name || 'pelanggan';
+  const customer_name = populatedInvoice.reservation_id?.name || 'pelanggan';
   const existingReports = await Laporan.find({ invoice_ref: invoice._id });
 
   if (populatedInvoice.status === 'Paid' && !existingReports.some(r => r.type === 'Income')) {
-    await createIncomeReport(populatedInvoice, customerName);
+    await createIncomeReport(populatedInvoice, customer_name);
   }
 
   if (populatedInvoice.status === 'Unpaid' && !existingReports.some(r => r.type === 'Expense')) {
-    await createExpenseReport(populatedInvoice, customerName);
+    await createExpenseReport(populatedInvoice, customer_name);
   }
 }
 
@@ -94,12 +95,40 @@ invois
   })
   */
   // POST BARU
-  .post("/", async c => {
+  .post("/", async (c) => {
+    try {
     const body = await c.req.json();
+    if (!body.customer_name || !body.reservation_id || !Array.isArray(body.reservation_id) || body.reservation_id.length === 0) {
+      return c.json({ message: "Nama pelanggan dan minimal satu reservasi wajib diisi." }, 400);
+    }
+    
+    const invoiceBaru = new Invois(body);
+
+    await invoiceBaru.save();
+
+    const dataLengkap = await Invois.findById(invoiceBaru._id).populate('reservation_id');
+
+    return c.json({
+      message: "Invoice berhasil dibuat",
+      data: dataLengkap
+    }, 201);
+
+  } catch (error: any) {
+    if (error.name === 'ValidationError') {
+      return c.json({
+        message: 'Validasi gagal',
+        errors: error.errors
+      }, 400);
+    }
+    
+    console.error("Error saat membuat invoice:", error);
+    return c.json({ message: "Terjadi kesalahan pada server" }, 500);
+  }
+})
     /**
      * Contoh isi body invois baru yang berisi dua reservasi:
      * {
-            "customerName": "Paksi Bayu",
+            "customer_name": "Paksi Bayu",
             "reservationIds": [
                 "665efc7e23850f12cf4f2b3d",
                 "665efc8c23850f12cf4f2b3e"
@@ -107,25 +136,32 @@ invois
         }
      */
 
-    const { customerName, reservationIds } = body;
+  //   const { customer_name, reservation_id, total_amount, fee } = body;
 
-    // Validasi ID-ID yang dikirim, optional tapi disarankan
-    const existingReservations = await Reservasi.find({
-        _id: { $in: reservationIds }
-    });
+  //   if (!reservation_id || !Array.isArray(reservation_id)) {
+  //     return c.json({ error:  'Properti "reservation_id" (dalam bentuk array) wajib diisi' }, 400);
+  //   }
 
-    if (existingReservations.length !== reservationIds.length) {
-        return c.json({ error: 'Beberapa reservation ID tidak ditemukan' }, 400);
-    }
+  //   // Validasi ID-ID yang dikirim, optional tapi disarankan
+  //   const existingReservations = await Reservasi.find({
+  //       _id: { $in: reservation_id }
+  //   });
 
-    // Buat invoice dengan ID-ID yang sudah dikirim
-    const invoice = await Invois.create({
-        customerName,
-        reservations: reservationIds
-    });
+  //   if (existingReservations.length !== reservation_id.length) {
+  //       return c.json({ error: 'Beberapa reservation ID tidak ditemukan' }, 400);
+  //   }
 
-    return c.json(invoice, 201);
-  })
+  //   // Buat invoice dengan ID-ID yang sudah dikirim
+  //   const invoice = new Invois({
+  //       customer_name,
+  //       reservation_id,
+  //       total_amount,
+  //       fee
+  //   });
+  //   await invoice.save();
+
+  //   return c.json(invoice, 201);
+  // })
   /* GET LAMA
   .get("/", async c => {
     const list = await Invois.find().populate('reservation_id');
@@ -147,7 +183,7 @@ invois
     [
         {
           "_id": "665ef1...",
-          "customerName": "Paksi Bayu",
+          "customer_name": "Paksi Bayu",
           "date": "2025-06-04T14:00:00.000Z",
           "reservations": [
             {
@@ -175,13 +211,13 @@ invois
       ]
     */
   })
-  .get("/:id", async c => {
+  .get("/:id", async (c) => {
     const { id } = c.req.param();
     const data = await Invois.findById(id).populate('reservation_id');
     if (!data) return c.json({ status: "tidak ditemukan" }, 404);
     return c.json({ status: "berhasil", data });
   })
-  .put("/:id", async c => {
+  .put("/:id", async (c) => {
     const { id } = c.req.param();
     const body = await c.req.json();
 
@@ -220,7 +256,7 @@ invois
       }, 500);
     }
   })
-  .delete("/:id", async c => {
+  .delete("/:id", async (c) => {
     const { id } = c.req.param();
     try {
       // Cari invoice untuk mendapatkan reservation_id

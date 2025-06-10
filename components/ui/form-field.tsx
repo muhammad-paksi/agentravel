@@ -4,10 +4,11 @@ import React from "react";
 interface FormFieldProps {
   label: string;
   type?: string;
-  value: string | number;
+  value: string | number | undefined;
   placeholder?: string;
   onChange: (val: string) => void;
   error?: string;
+  disabled?: boolean;
 }
 
 export function FormField({ 
@@ -17,17 +18,24 @@ export function FormField({
   placeholder, 
   onChange,
   error,
-
+  disabled = false,
 }: FormFieldProps) {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onChange?.(e.target.value);
+  };
   return (
     <div>
-      <label className="block text-sm font-medium mb-1">{label}</label>
+      <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
       <Input
-        className={`text-gray-600 border-b border-gray-300 font-normal ${error ? "border-red-500" : "border-gray-300"}`}
+        className={`w-full text-gray-800 border-gray-300 font-normal
+          ${error ? "border-red-500" : "focus:border-blue-500"}
+          ${disabled ? "bg-gray-100 cursor-not-allowed" : "bg-white"}`
+        }
         type={type}
-        value={value}
+        value={value ?? ''}
         placeholder={placeholder}
-        onChange={e => onChange(e.target.value)}
+        onChange={handleChange}
+        disabled={disabled}
       />
       {error && (
         <p className="mt-1 text-sm text-red-600">

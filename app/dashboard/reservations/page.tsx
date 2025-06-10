@@ -47,7 +47,7 @@ export default function ReservationsPage() {
 
         {/* Catatan tentang tab yang dipilih */}
         <p className="text-sm text-gray-500 mt-2">
-          Menampilkan data reservasi {activeTab === "flight" ? "penerbangan" : "hotel"}.
+        Displays reservation data {activeTab === "flight" ? "penerbangan" : "hotel"}.
         </p>
       </div>
     </div>

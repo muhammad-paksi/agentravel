@@ -1,40 +1,60 @@
 import { ReservationFormValues } from './reservationType';
 
+// Tipe ini tidak perlu diubah
 export type PaymentMethod = "Bank Transfer" | "Credit Card" | "Cash";
 export type Status = "Unpaid" | "Paid";
 
+/**
+ * Representasi objek reservasi yang sudah di-populate di dalam invoice.
+ * Sesuai dengan referensi 'Reservation' di skema Anda.
+ */
 export interface ReservationReference {
+  contact: string;
   _id: string;
   ticket_id: string;
   name: string;
   destination: string;
-  contact: string;
+  total_price: number;
+  date: Date;
+  carrier_name: string;
+  hotel_name: string;
 }
 
-
+/**
+ * [BERUBAH] Interface untuk nilai-nilai dalam form pembuatan Invoice.
+ * - Mencerminkan input pengguna: customer_name dan daftar ID reservasi.
+ * - Fee diatur di sini.
+ */
 export interface InvoiceFormValues {
-    reservation_id: string;
-    reservation_ref?: Partial<ReservationReference>;
-    reservation?: ReservationFormValues;
-    total_amount: number;
-    fee: number;
-    payment_method: PaymentMethod
-    payment_date: Date;
-    issued_date: Date;
-    due_date: Date;
-    status: Status;
-
-    readonly _id?: string;
+  _id?: string;
+  customer_name: string;
+  reservation_id: string[];
+  
+  fee: number;
+  total_amount: number;
+  payment_method: PaymentMethod;
+  payment_date: Date;
+  issued_date: Date;
+  due_date: Date;
+  status: Status;
 }
 
-export interface Invoice extends InvoiceFormValues {
+export interface Invoice {
   _id: string;
+  customer_name: string;
+  reservation_id: ReservationReference[]; 
+  total_amount: number;
+  fee: number;
+  payment_method: PaymentMethod;
+  payment_date: string;
+  issued_date: string;
+  due_date: string;
+  status: Status;
+
   createdAt: string;
   updatedAt: string;
-  /** Populated reservation object from the API */
-  
-  total_price?: number; // Added total_price as optional
 }
+
 
 export interface ApiResponse<T> {
   status?: string;
@@ -43,23 +63,9 @@ export interface ApiResponse<T> {
 }
 
 export type InvoiceFilters = {
-  page?: number;
-  limit?: number;
   search?: string;
   status?: string;
-  payment_date?: string;
-  reservation_id?: string;
 };
-
-export interface Options {
-  id?: string;
-  page?: number;
-  limit?: number;
-  search?: string;
-  status?: string;
-  reservation_id?: string;
-  initialValues?: Partial<InvoiceFormValues>;
-}
 
 export interface PagedResult<T> {
   data: T[];
