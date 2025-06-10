@@ -23,7 +23,6 @@ const reservasiSchema = new mongoose.Schema(
     nik              : { type: Number, required: true },
     name             : { type: String, required: true },
     contact          : { type: String, required: true },
-    type             : { type: String, enum: ['flight', 'hotel', 'activity'], required: false },
     ticket_id        : { type: Number, required: true },
     destination      : { type: String, required: true },
     departure_date   : { type: Date, required: true },
@@ -35,18 +34,13 @@ const reservasiSchema = new mongoose.Schema(
     checkInDate      : { type: Date, required: false },       
     estimated_budget : { type: Number, required: false },
     hotel_name       : { type: String, required: false },
-    room_price       : { type: Number, required: false },
+    room_price     : { type: Number, required: false },
     // total_price menyimpan hasil ticket_price + room_price, jika hotel tidak ada maka total_price = ticket_price
     total_price      : { type: Number, required: true },
-    
-    payment_method   : { type: String, enum: ['Prepaid', 'Postpaid'], required: true },  
+    payment_method   : { type: String, enum: ['Prepaid', 'Postpaid'], required: true },
     payment_status   : { type: String, enum: ['Pending', 'Paid'], required: true },
     status           : { type: String, enum: ['Booked', 'Completed', 'Canceled'], required: true },
-
-    admin_id         : [{ /* type: String,*/ 
-      type: mongoose.Schema.Types.ObjectId, 
-      ref: 'pengguna', 
-      required: true }],
+    admin_id         : { type: String, required: true },
   },
   { collection: "reservasi", timestamps: true },
 );
