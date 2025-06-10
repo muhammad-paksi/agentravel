@@ -58,32 +58,39 @@ async function createExpenseReport(invoice: any, customer_name: string) {
 }
 
 async function logInvoiceStatusChange(invoice: any) {
-  // First populate the invoice with reservation data if not already populated
-  const populatedInvoice = await Invois.findById(invoice._id)
-    .populate({
-      path: 'reservation_id',
-      model: 'reservasi'
+  try {
+    // Populate invoice data with reservation info
+    const populatedInvoice = await Invois.findById(invoice._id)
+      .populate({
+        path: 'reservation_id',
+        model: 'reservasi'
+      });
+
+    if (!populatedInvoice) {
+      console.error('Invoice not found');
+      return;
+    }
+
+    // Get first reservation's ticket_id or use invoice ID as fallback
+    const ticketId = populatedInvoice.reservation_id[0]?.ticket_id || invoice._id;
+    const customerName = populatedInvoice.customer_name || 
+                        (populatedInvoice.reservation_id[0]?.name || 'pelanggan');
+
+    // Create log entry
+    const logTransaksi = new LogTransaksi({
+      reference_id: invoice._id,
+      reference_type: 'Invoice',
+      date: new Date(),
+      description: `Reservation name of "${customerName}" has been paid`,
+      actor: 'Finance Admin'
     });
-
-  if (!populatedInvoice) {
-    console.error('Invoice not found');
-    return;
+    
+    await logTransaksi.save();
+    console.log('Log transaksi berhasil disimpan:', logTransaksi);
+  } catch (error) {
+    console.error('Gagal menyimpan log transaksi:', error);
+    throw error;
   }
-
-  // Get the ticket_id from the reservation
-  const ticketId = populatedInvoice.reservation_id[0]?.ticket_id || 'unknown';
-  const customer_name = populatedInvoice.customer_name || 'pelanggan';
-
-  const logTransaksi = new LogTransaksi({
-    reference_id: invoice._id, // Use the ticket_id instead of invoice._id
-    reference_type: 'Invoice',
-    date: new Date(),
-    description: `Reservation ID: #${ticketId} has been paid`, // Use the ticket_id here
-    actor: 'Finance Admin'
-  });
-  
-  await logTransaksi.save();
-  console.log('Log transaksi berhasil disimpan');
 }
 
 invois
@@ -234,12 +241,17 @@ invois
         return c.json({ status: "tidak ditemukan", message: "Invoice tidak ditemukan" }, 404);
       }
 
+      // Check if status changed from Unpaid to Paid
       if (originalInvoice?.status === 'Unpaid' && updatedInvoice.status === 'Paid') {
+        // Create income report
         await createReportsFromInvoice(updatedInvoice, true);
+        
+        // Log the status change
         try {
           await logInvoiceStatusChange(updatedInvoice);
         } catch (logError) {
           console.error('Gagal menyimpan log transaksi:', logError);
+          // Jangan return error di sini, biarkan proses tetap berlanjut
         }
       }
 
