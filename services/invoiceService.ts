@@ -1,14 +1,8 @@
-import {
-  InvoiceFormValues,
-  ApiResponse,
-  InvoiceFilters,
-  PagedResult,
-  Invoice,
-} from '@/types/invoiceType';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
+import { InvoiceFormValues, ApiResponse, InvoiceFilters, PagedResult, Invoice } from "@/types/invoiceType";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
-const BASE_URL = '/api/invois';
+const BASE_URL = "/api/invois";
 
 export async function getAllInvoices(filters: InvoiceFilters = {}): Promise<Invoice[]> {
   const params = new URLSearchParams();
@@ -43,7 +37,7 @@ export async function addInvoice(payload: InvoiceFormValues): Promise<Invoice> {
   });
 
   if (!res.ok) {
-    const resClone = res.clone(); 
+    const resClone = res.clone();
     try {
       const errorData = await res.json();
       throw new Error(errorData.message || errorData.error || `Error ${res.status}: Terjadi kesalahan pada server`);
@@ -56,10 +50,7 @@ export async function addInvoice(payload: InvoiceFormValues): Promise<Invoice> {
   return json.data;
 }
 
-export async function updateInvoice(
-  id: string,
-  payload: Partial<InvoiceFormValues>
-): Promise<Invoice> {
+export async function updateInvoice(id: string, payload: Partial<InvoiceFormValues>): Promise<Invoice> {
   const { customer_name, reservation_id, ...updatePayload } = payload;
   const res = await fetch(`${BASE_URL}/${id}`, {
     method: "PUT",
@@ -85,45 +76,45 @@ export async function deleteInvoice(id: string): Promise<void> {
 
 // --- FUNGSI HELPER UNTUK PDF ---
 const formatCurrency = (amount: number | undefined) => {
-  if (typeof amount !== 'number') return 'Rp 0';
-  return `Rp ${amount.toLocaleString('id-ID')}`;
+  if (typeof amount !== "number") return "Rp 0";
+  return `Rp ${amount.toLocaleString("id-ID")}`;
 };
 
 function numberToWords(n: number): string {
-  if (isNaN(n)) return 'Bukan angka';
+  if (isNaN(n)) return "Bukan angka";
   const num = Math.round(n);
-  if (num === 0) return 'nol';
-  if (num > Number.MAX_SAFE_INTEGER) return num.toLocaleString('id-ID');
-  const satuan = ['', 'satu', 'dua', 'tiga', 'empat', 'lima', 'enam', 'tujuh', 'delapan', 'sembilan'];
+  if (num === 0) return "nol";
+  if (num > Number.MAX_SAFE_INTEGER) return num.toLocaleString("id-ID");
+  const satuan = ["", "satu", "dua", "tiga", "empat", "lima", "enam", "tujuh", "delapan", "sembilan"];
   const terbilang = (currentNum: number): string => {
-      if (currentNum === 0) return '';
-      if (currentNum < 12) {
-          if (currentNum === 10) return 'sepuluh';
-          if (currentNum === 11) return 'sebelas';
-          return satuan[currentNum];
-      }
-      if (currentNum < 20) return satuan[currentNum - 10] + ' belas';
-      if (currentNum < 100) return satuan[Math.floor(currentNum / 10)] + ' puluh' + (currentNum % 10 > 0 ? ' ' + satuan[currentNum % 10] : '');
-      if (currentNum < 200) return 'seratus' + (currentNum % 100 > 0 ? ' ' + terbilang(currentNum % 100) : '');
-      if (currentNum < 1000) return satuan[Math.floor(currentNum / 100)] + ' ratus' + (currentNum % 100 > 0 ? ' ' + terbilang(currentNum % 100) : '');
-      if (currentNum < 2000) return 'seribu' + (currentNum % 1000 > 0 ? ' ' + terbilang(currentNum % 1000) : '');
-      if (currentNum < 1000000) return terbilang(Math.floor(currentNum / 1000)) + ' ribu' + (currentNum % 1000 > 0 ? ' ' + terbilang(currentNum % 1000) : '');
-      if (currentNum < 1000000000) return terbilang(Math.floor(currentNum / 1000000)) + ' juta' + (currentNum % 1000000 > 0 ? ' ' + terbilang(currentNum % 1000000) : '');
-      if (currentNum < 1000000000000) return terbilang(Math.floor(currentNum / 1000000000)) + ' miliar' + (currentNum % 1000000000 > 0 ? ' ' + terbilang(currentNum % 1000000000) : '');
-      return terbilang(Math.floor(currentNum / 1000000000000)) + ' triliun' + (currentNum % 1000000000000 > 0 ? ' ' + terbilang(currentNum % 1000000000000) : '');
+    if (currentNum === 0) return "";
+    if (currentNum < 12) {
+      if (currentNum === 10) return "sepuluh";
+      if (currentNum === 11) return "sebelas";
+      return satuan[currentNum];
+    }
+    if (currentNum < 20) return satuan[currentNum - 10] + " belas";
+    if (currentNum < 100) return satuan[Math.floor(currentNum / 10)] + " puluh" + (currentNum % 10 > 0 ? " " + satuan[currentNum % 10] : "");
+    if (currentNum < 200) return "seratus" + (currentNum % 100 > 0 ? " " + terbilang(currentNum % 100) : "");
+    if (currentNum < 1000) return satuan[Math.floor(currentNum / 100)] + " ratus" + (currentNum % 100 > 0 ? " " + terbilang(currentNum % 100) : "");
+    if (currentNum < 2000) return "seribu" + (currentNum % 1000 > 0 ? " " + terbilang(currentNum % 1000) : "");
+    if (currentNum < 1000000) return terbilang(Math.floor(currentNum / 1000)) + " ribu" + (currentNum % 1000 > 0 ? " " + terbilang(currentNum % 1000) : "");
+    if (currentNum < 1000000000) return terbilang(Math.floor(currentNum / 1000000)) + " juta" + (currentNum % 1000000 > 0 ? " " + terbilang(currentNum % 1000000) : "");
+    if (currentNum < 1000000000000) return terbilang(Math.floor(currentNum / 1000000000)) + " miliar" + (currentNum % 1000000000 > 0 ? " " + terbilang(currentNum % 1000000000) : "");
+    return terbilang(Math.floor(currentNum / 1000000000000)) + " triliun" + (currentNum % 1000000000000 > 0 ? " " + terbilang(currentNum % 1000000000000) : "");
   };
   const result = terbilang(num);
-  return result.replace(/\s\s+/g, ' ').trim();
+  return result.replace(/\s\s+/g, " ").trim();
 }
 
 export async function exportBulkPdf(ids: string[]): Promise<void> {
-  if (!ids?.length) throw new Error('Tidak ada ID invoice yang dipilih');
+  if (!ids?.length) throw new Error("Tidak ada ID invoice yang dipilih");
 
   try {
-    const invoices: Invoice[] = await Promise.all(ids.map(id => getInvoice(id)));
-    if (invoices.length === 0) throw new Error('Invoice tidak ditemukan');
+    const invoices: Invoice[] = await Promise.all(ids.map((id) => getInvoice(id)));
+    if (invoices.length === 0) throw new Error("Invoice tidak ditemukan");
 
-    const doc = new jsPDF({ unit: 'pt', format: 'a4' });
+    const doc = new jsPDF({ unit: "pt", format: "a4" });
 
     invoices.forEach((invoice, idx) => {
       if (idx > 0) doc.addPage();
@@ -133,95 +124,101 @@ export async function exportBulkPdf(ids: string[]): Promise<void> {
       const rightColX = 350;
 
       // --- HEADER: LOGO, JUDUL, INFO PERUSAHAAN ---
-      doc.setFontSize(22).setFont('helvetica', 'bold').text('INVOICE', leftMargin, 50);
+      doc.setFontSize(22).setFont("helvetica", "bold").text("INVOICE", leftMargin, 50);
       try {
-        doc.addImage('/img/logo-karisma.jpg', 'JPEG', doc.internal.pageSize.getWidth() - rightMargin - 120, 20, 100, 70);
+        doc.addImage("/img/SITRAVEL.png", "PNG", doc.internal.pageSize.getWidth() - rightMargin - 120, 20, 100, 70);
       } catch (logoError) {
-        console.warn('Gagal memuat logo:', logoError);
+        console.warn("Gagal memuat logo:", logoError);
       }
-      doc.setFontSize(10).setFont('helvetica', 'bold');
-      doc.text('KARISMA TOUR AND TRAVEL', rightColX - 70, 50);
-      doc.setFontSize(9).setFont('helvetica', 'normal');
-      doc.text('Perum Grand Soeroso Kav 24 Malang', rightColX - 70, 65);
-      doc.text('081217369484', rightColX - 70, 80);
-      doc.text('karisma.travel@yahoo.co.id', rightColX - 70, 95);
+      doc.setFontSize(10).setFont("helvetica", "bold");
+      doc.text("SITRAVEL", rightColX - 70, 50);
+      doc.setFontSize(9).setFont("helvetica", "normal");
+      doc.text("Jl. Soekarno Hatta No.9", rightColX - 70, 65);
+      doc.text("081217369484", rightColX - 70, 80);
+      doc.text("info@sitravelagent.my.id", rightColX - 70, 95);
 
       // --- BILL TO ---
       const detailY = 90;
-      doc.setFontSize(10).setFont('helvetica', 'bold').text('Bill to:', leftMargin, detailY);
-      doc.setFont('helvetica', 'normal').setFontSize(10);
-      doc.text(`Name        :  ${invoice.customer_name || 'N/A'}`, leftMargin, detailY + 15);
-      doc.text(`Contact     :  ${invoice.reservation_id[0]?.contact || 'N/A'}`, leftMargin, detailY + 30);
+      doc.setFontSize(10).setFont("helvetica", "bold").text("Bill to:", leftMargin, detailY);
+      doc.setFont("helvetica", "normal").setFontSize(10);
+      doc.text(`Name        :  ${invoice.customer_name || "N/A"}`, leftMargin, detailY + 15);
+      doc.text(`Contact     :  ${invoice.reservation_id[0]?.contact || "N/A"}`, leftMargin, detailY + 30);
 
       // --- TABEL RINCIAN RESERVASI (Logika dari kode aktif) ---
-      const tableBody = (invoice.reservation_id || []).map(res => [
+      const tableBody = (invoice.reservation_id || []).map((res) => [
         `#${res.ticket_id}`,
-        `${res.carrier_name || '-'}`,
-        `${res.hotel_name || '-'}`,
+        `${res.carrier_name || "-"}`,
+        `${res.hotel_name || "-"}`,
         res.destination,
         res.name,
         formatCurrency(res.total_price),
         formatCurrency(res.total_price),
       ]);
-      
+
       const grandTotal = (invoice.total_amount || 0) + (invoice.fee || 0);
 
       autoTable(doc, {
         startY: detailY + 50,
-        theme: 'grid',
-        head: [['ID Tiket', 'Remark', 'Hotel', 'Route', 'Pax Name', 'Price / Pack', 'Total']],
+        theme: "grid",
+        head: [["ID Tiket", "Remark", "Hotel", "Route", "Pax Name", "Price / Pack", "Total"]],
         body: tableBody,
         headStyles: {
-          fontStyle: 'bold',
-          halign: 'center',
+          fontStyle: "bold",
+          halign: "center",
           fillColor: [240, 240, 240],
-          textColor: [0, 0, 0]
+          textColor: [0, 0, 0],
         },
         bodyStyles: {
-          fontStyle: 'normal',
-          halign: 'center',
+          fontStyle: "normal",
+          halign: "center",
         },
         footStyles: {
-          halign: 'right',
-          fontStyle: 'normal',
+          halign: "right",
+          fontStyle: "normal",
           fillColor: [240, 240, 240],
-          textColor: [0, 0, 0]
+          textColor: [0, 0, 0],
         },
-        columnStyles: { 3: { halign: 'right' } },
+        columnStyles: { 3: { halign: "right" } },
         foot: [
-          [{ content: 'Subtotal', colSpan: 6, styles: { fontStyle: 'bold' } },
-            { content: formatCurrency(invoice.total_amount) }],
-          [{ content: 'Biaya Tambahan', colSpan: 6, styles: { fontStyle: 'bold' } },
-            { content: formatCurrency(invoice.fee) }],
-          [{ content: 'Grand Total', colSpan: 6, styles: { fontStyle: 'bold' } },
-            { content: formatCurrency(grandTotal) }]
-        ]
+          [{ content: "Subtotal", colSpan: 6, styles: { fontStyle: "bold" } }, { content: formatCurrency(invoice.total_amount) }],
+          [{ content: "Biaya Tambahan", colSpan: 6, styles: { fontStyle: "bold" } }, { content: formatCurrency(invoice.fee) }],
+          [{ content: "Grand Total", colSpan: 6, styles: { fontStyle: "bold" } }, { content: formatCurrency(grandTotal) }],
+        ],
       });
 
       const finalY = (doc as any).lastAutoTable.finalY + 30;
 
       // --- FOOTER: TERBILANG, INFO BANK, TANDA TANGAN ---
-      doc.setFontSize(10).setFont('helvetica', 'bold').text('Terbilang :', leftMargin, finalY);
-      doc.setFont('helvetica', 'italic').setFontSize(9)
-        .text(numberToWords(grandTotal).toUpperCase() + ' RUPIAH', leftMargin, finalY + 15, { maxWidth: 300 });
+      doc.setFontSize(10).setFont("helvetica", "bold").text("Terbilang :", leftMargin, finalY);
+      doc
+        .setFont("helvetica", "italic")
+        .setFontSize(9)
+        .text(numberToWords(grandTotal).toUpperCase() + " RUPIAH", leftMargin, finalY + 15, { maxWidth: 300 });
 
       const boxY = finalY + 45;
       doc.rect(leftMargin, boxY, 280, 50);
-      doc.setFontSize(9).text('Transfer Bank Mandiri a.n Erik Andrias Budi Prasetyo SAB', leftMargin + 10, boxY + 15);
-      doc.text('No. Rek 144 00 0012684 4', leftMargin + 10, boxY + 30);
-      
-      const tanggal = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
-      const sigX = 380;
-      doc.setFontSize(10).setFont('helvetica', 'normal').text(`Malang, ${tanggal}`, sigX + 60, boxY);
-      doc.setFontSize(10).setFont('helvetica', 'bold').text('Erik Andrias B.P', sigX + 60, boxY + 60);
+      doc.setFontSize(9).text("Transfer Bank BRI a.n SITRAVEL", leftMargin + 10, boxY + 15);
+      doc.text("No. Rekening : 51148 22871 00981", leftMargin + 10, boxY + 30);
 
+      const tanggal = new Date().toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
+      const sigX = 380;
+      doc
+        .setFontSize(10)
+        .setFont("helvetica", "normal")
+        .text(`Malang, ${tanggal}`, sigX + 60, boxY);
+      doc
+        .setFontSize(10)
+        .setFont("helvetica", "bold")
+        .text("SITRAVEL", sigX + 60, boxY + 60);
     });
 
-    const filename = `invoices_${new Date().toISOString().slice(0, 10)}.pdf`;
+    // --- SIMPAN PDF ---
+    const customerName = invoices[0]?.customer_name || "customer";
+    const sanitizedCustomerName = customerName.toLowerCase().replace(/[^a-z0-9]/gi, "_");
+    const filename = `invoice_${sanitizedCustomerName}_${new Date().toISOString().slice(0, 10)}.pdf`;
     doc.save(filename);
-
   } catch (error) {
-    console.error('Gagal mengekspor PDF:', error);
-    throw new Error(`Gagal mengekspor PDF: ${error instanceof Error ? error.message : 'Kesalahan tidak diketahui'}`);
+    console.error("Gagal mengekspor PDF:", error);
+    throw new Error(`Gagal mengekspor PDF: ${error instanceof Error ? error.message : "Kesalahan tidak diketahui"}`);
   }
 }

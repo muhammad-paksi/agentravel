@@ -7,6 +7,9 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata = {
   title: "SITRAVEL",
   description: "Your travel dashboard",
+  icons: {
+    icon: "/img/logo.svg", // ← Ini akan jadi favicon
+  },
 };
 
 export default function RootLayout({
