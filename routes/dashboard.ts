@@ -99,7 +99,6 @@ dashboard.get('/dashboard-stats', async (c) => {
           }
         ]);
         
-        console.log("monthlyReservation: ", monthlyReservations)
         // Mengisi bulan yang tidak ada data dengan totalSales 0
         const reservationMap = new Map();
         monthlyReservations.forEach(reservasi => {
