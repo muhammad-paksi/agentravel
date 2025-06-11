@@ -42,7 +42,13 @@ export function DashboardContent({ user }: { user: { id: string; username: strin
         const json = await response.json();
         
         if (json.status === "berhasil") {
+          // json.data.monthlyReservations = json.data.monthlyReservations.map((item: any) => ({
+          //   name: item.monthName,
+          //   value: item.totalReservations,
+          // }))
+          // console.log("json.data: ", json.data.monthlyReservations)
           setDashboardData(json.data);
+          // console.log("monthlyreserve: ", dashboardData.monthlyReservations)
         }
       } catch (error) {
         console.error("Failed to fetch dashboard data:", error);
@@ -83,13 +89,21 @@ export function DashboardContent({ user }: { user: { id: string; username: strin
   ];
 
   // Format chart data
-  const chartData = dashboardData.monthlyReservations.length > 0 
-    ? dashboardData.monthlyReservations.map(item => ({
-        name: item.monthName,
-        value: item.totalReservations
-      }))
-    : data;
-
+  // const chartData = dashboardData.monthlyReservations.length > 0 
+  //   ? dashboardData.monthlyReservations.map(item => ({
+  //       name: item.monthName,
+  //       value: item.totalReservations
+  //     }))
+  //   : data;
+  // console.log("chardata:", chartData)
+    
+  let chartData = [];
+  chartData = dashboardData.monthlyReservations.map((item) => ({
+    name: item.monthName,
+    value: item.totalReservations,
+  }))
+  // const chartData = dataSales;
+  console.log("chardData: ", chartData)
   return (
     <main className="bg-background min-h-screen space-y-5">
       {/* Greeting Banner */}
@@ -156,7 +170,7 @@ export function DashboardContent({ user }: { user: { id: string; username: strin
                     />
                     <Area
                       dataKey="value"
-                      type="natural"
+                      type="linear"
                       fill="var(--chart-2)"
                       fillOpacity={0.4}
                       stroke="var(--chart-1)"

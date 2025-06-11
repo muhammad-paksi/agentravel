@@ -19,7 +19,7 @@ export default async function Dashboard() {
     
   return (
       <Suspense fallback={<p>Loading dashboard...</p>}>
-          <DashboardContent dashboardData={dashboardData} user={user} />
+          <DashboardContent user={user} />
       </Suspense>
   );
 }

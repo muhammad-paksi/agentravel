@@ -49,36 +49,80 @@ dashboard.get('/dashboard-stats', async (c) => {
         nineMonthsAgo.setHours(0, 0, 0, 0);
         
         let monthlyReservations = await Reservasi.aggregate([
-            {
-                $match: {
-                    date: { $gte: nineMonthsAgo }
-                }
-            },
-            {
-                $group: {
-                    _id: {
-                        year: { $year: '$date' },
-                        month: { $month: '$date' }
-                    },
-                    totalReservations: { $sum: 1 }
-                }
-            },
-            {
-                $sort: {
-                    '_id.year': 1,
-                    '_id.month': 1
-                }
+          {
+            $match: {
+              departure_date: { $gte: nineMonthsAgo },
+              status: { $ne: "Canceled" } // ambil yang status-nya BUKAN Canceled
             }
+          },
+          {
+            $group: {
+              _id: {
+                year: { $year: '$departure_date' },
+                month: { $month: '$departure_date' }
+              },
+              totalReservations: { $sum: 1 }
+            }
+          },
+          {
+            $project: {
+              _id: 0,
+              year: '$_id.year',
+              month: '$_id.month',
+              totalReservations: 1,
+              monthName: {
+                $switch: {
+                  branches: [
+                    { case: { $eq: ['$_id.month', 1] }, then: 'Januari' },
+                    { case: { $eq: ['$_id.month', 2] }, then: 'Februari' },
+                    { case: { $eq: ['$_id.month', 3] }, then: 'Maret' },
+                    { case: { $eq: ['$_id.month', 4] }, then: 'April' },
+                    { case: { $eq: ['$_id.month', 5] }, then: 'Mei' },
+                    { case: { $eq: ['$_id.month', 6] }, then: 'Juni' },
+                    { case: { $eq: ['$_id.month', 7] }, then: 'Juli' },
+                    { case: { $eq: ['$_id.month', 8] }, then: 'Agustus' },
+                    { case: { $eq: ['$_id.month', 9] }, then: 'September' },
+                    { case: { $eq: ['$_id.month', 10] }, then: 'Oktober' },
+                    { case: { $eq: ['$_id.month', 11] }, then: 'November' },
+                    { case: { $eq: ['$_id.month', 12] }, then: 'Desember' }
+                  ],
+                  default: 'Tidak Diketahui'
+                }
+              }
+            }
+          },
+          {
+            $sort: {
+              year: 1,
+              month: 1
+            }
+          }
         ]);
-
-        // Format monthly data
-        const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", 
-                          "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
         
-        const formattedMonthlyReservations = monthlyReservations.map(item => ({
-            monthName: monthNames[item._id.month - 1],
-            totalReservations: item.totalReservations
-        }));
+        console.log("monthlyReservation: ", monthlyReservations)
+        // Mengisi bulan yang tidak ada data dengan totalSales 0
+        const reservationMap = new Map();
+        monthlyReservations.forEach(reservasi => {
+          const key = `${reservasi.year}-${reservasi.month}`;
+          reservationMap.set(key, reservasi.totalReservations);
+        });
+    
+        const result = [];
+        for (let i = 0; i < 9; i++) {
+          const date = new Date(today.getFullYear(), today.getMonth() - (8 - i), 1);
+          const year = date.getFullYear();
+          const month = date.getMonth() + 1; // getMonth() is 0-indexed
+          const monthName = new Date(year, month - 1).toLocaleString('id-ID', { month: 'short' });
+          const key = `${year}-${month}`;
+          const totalReservations = reservationMap.get(key) || 0; // Jika tidak ada data, anggap 0
+    
+          result.push({
+            year,
+            monthName,
+            totalReservations,
+          });
+        }
+      monthlyReservations = result;
 
         // 6. Latest Reservations
         const latestReservations = await Reservasi.find()
@@ -93,7 +137,7 @@ dashboard.get('/dashboard-stats', async (c) => {
                 pendingReservations,
                 unpaidInvoices,
                 monthlyRevenue,
-                monthlyReservations: formattedMonthlyReservations,
+                monthlyReservations,
                 latestReservations
             }
         });
