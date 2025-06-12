@@ -9,8 +9,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/u
 import { useReportForm } from "@/hooks/useReportForm"
 import { format } from "date-fns"
 import { id } from "date-fns/locale"
+import { useIsMobile } from "@/hooks/use-mobile"
 
 export function ReportsTableIncome() {
+    const isMobile = useIsMobile();
     const {
         loading,
         searchQuery,
@@ -50,8 +52,8 @@ export function ReportsTableIncome() {
                     </div>
                     <Select value={amountRange} onValueChange={setAmountRange}>
                         <SelectTrigger className="h-10 border border-gray-300 px-3 py-2 flex items-center space-x-2">
-                            <Settings2Icon className="h-5 w-5 grayscale-50" />
-                            <span>Filter</span>
+                            <Settings2Icon className="h-5 w-5 text-gray-400" />
+                            { !isMobile && <span className="text-gray-400">Filter</span> }
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="all">All Amounts</SelectItem>

@@ -110,8 +110,14 @@ export function Header({user} : { user: UserType }) {
         {/* <button className="p-2 rounded-full bg-[#f5f5f5] hover:bg-[#5D5D5D]">
           <Bell size={20} className="text-[#3D3D3D]" />
         </button> */}
+        <Avatar className="h-8 w-8">
+          <AvatarFallback className="bg-[#377dec]">
+            <CircleUserRound className="text-white h-8 w-8" />
+          </AvatarFallback>
+        </Avatar>
+        <span className="text-sm font-medium hidden md:inline">{ user?.username }</span>
 
-        <DropdownMenu>
+        {/* <DropdownMenu>
           <DropdownMenuTrigger className="flex items-center gap-2">
             <Avatar className="h-8 w-8">
               <AvatarFallback className="bg-[#377dec]">
@@ -129,7 +135,7 @@ export function Header({user} : { user: UserType }) {
             <DropdownMenuSeparator />
             <DropdownMenuItem>Logout</DropdownMenuItem>
           </DropdownMenuContent>
-        </DropdownMenu>
+        </DropdownMenu> */}
       </div>
     </header>
   )

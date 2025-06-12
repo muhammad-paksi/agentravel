@@ -61,8 +61,8 @@ export function HistoryTable() {
           </div>
           <Select value={typeFilter} onValueChange={setTypeFilter}>
             <SelectTrigger className="h-10 border border-gray-300 px-3 py-2 flex items-center space-x-2">
-              <Settings2Icon className="h-5 w-5 grayscale-50" />
-              <span>Filter</span>
+              <Settings2Icon className="h-5 w-5 text-gray-400" />
+              { !isMobile && <span className="text-gray-400">Filter</span> }
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Type</SelectItem>

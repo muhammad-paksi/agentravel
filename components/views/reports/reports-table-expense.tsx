@@ -1,16 +1,15 @@
 "use client"
 
-import Link from "next/link"
-import { Plus, Search, Settings2Icon } from "lucide-react"
+import { Search, Settings2Icon } from "lucide-react"
 import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select"
 import { useReportForm } from "@/hooks/useReportForm"
+import { useIsMobile } from "@/hooks/use-mobile"
 import { format } from "date-fns"
 import { id } from "date-fns/locale"
 
 export function ReportsTableExpense() {
+    const isMobile = useIsMobile();
     const {
         loading,
         searchQuery,
@@ -50,8 +49,8 @@ export function ReportsTableExpense() {
                     </div>
                     <Select value={amountRange} onValueChange={setAmountRange}>
                         <SelectTrigger className="h-10 border border-gray-300 px-3 py-2 flex items-center space-x-2">
-                            <Settings2Icon className="h-5 w-5 grayscale-50" />
-                            <span>Filter</span>
+                            <Settings2Icon className="h-5 w-5 text-gray-400" />
+                            { !isMobile && <span className="text-gray-400">Filter</span> }
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="all">All Amounts</SelectItem>
